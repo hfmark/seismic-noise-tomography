@@ -12,6 +12,8 @@ get_Iris*
 test_elipsoid.py
 *.pyc
 *~
+*.swp
 .fuse_hidden*
 /backup/
 /output/
+tests/
