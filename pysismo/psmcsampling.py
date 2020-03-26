@@ -88,10 +88,10 @@ class Parameter:
 
         if abs(self._step - other._step) > EPS:
             s = "Warning: parameters {} and {} have different sampling steps"
-            print s.format(self, other)
+            print(s.format(self, other))
         if abs(self._maxjumpsize - other._maxjumpsize) > EPS:
             s = "Warning: parameters {} and {} have different max jump size"
-            print s.format(self, other)
+            print(s.format(self, other))
         if self.nsample != other.nsample:
             raise Exception("Parameters must have the same nb of samples")
 
