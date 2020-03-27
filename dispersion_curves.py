@@ -55,7 +55,7 @@ from pysismo.psconfig import CROSSCORR_DIR, FTAN_DIR
 flist = sorted(glob.glob(os.path.join(CROSSCORR_DIR, 'xcorr*.pickle*')))
 print('Select file(s) containing cross-correlations to process: [All except backups]')
 print('0 - All except backups (*~)')
-for i,f in list(enumerate(flist)):
+for i,f in enumerate(flist):
     print('{} - {}'.format(i+1,os.path.basename(f)))
 
 res = input('\n')
