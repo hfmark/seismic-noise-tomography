@@ -105,10 +105,11 @@ MULTIPROCESSING = {'merge trace': False,
                    'process trace': False,
                    'cross-corr': False}
 # how many concurrent processes? (set None to let multiprocessing module decide)
-NB_PROCESSES = None
+#NB_PROCESSES = None  # this will try to use *all* CPUs, even if they're not available
+NB_PROCESSES = 4  # safe, probably?
 if any(MULTIPROCESSING.values()):
     import multiprocessing as mp
-    mp.freeze_support()  # for Windows...
+    mp.freeze_support()  # for Windows; no effect on non-Windows systems
 
 # ====================================================
 # parsing configuration file to import some parameters
