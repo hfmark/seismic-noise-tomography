@@ -49,26 +49,26 @@ import glob
 import os
 
 # parsing configuration file to import dir of cross-corr results
-from pysismo.psconfig import CROSSCORR_DIR
+from pysismo.psconfig import CROSSCORR_DIR, FTAN_DIR
 
 # loading cross-correlations (looking for *.pickle files in dir *CROSSCORR_DIR*)
 flist = sorted(glob.glob(os.path.join(CROSSCORR_DIR, 'xcorr*.pickle*')))
-print 'Select file(s) containing cross-correlations to process: [All except backups]'
-print '0 - All except backups (*~)'
-print '\n'.join('{} - {}'.format(i + 1, os.path.basename(f))
-                for i, f in enumerate(flist))
+print('Select file(s) containing cross-correlations to process: [All except backups]')
+print('0 - All except backups (*~)')
+for i,f in list(enumerate(flist)):
+    print('{} - {}'.format(i+1,os.path.basename(f)))
 
-res = raw_input('\n')
+res = input('\n')
 if not res:
     pickle_files = [f for f in flist if f[-1] != '~']
 else:
     pickle_files = [flist[int(i)-1] for i in res.split()]
 
-usersuffix = raw_input("\nEnter suffix to append: [none]\n").strip()
+usersuffix = input("\nEnter suffix to append: [none]\n").strip()
 
 # processing each set of cross-correlations
 for pickle_file in pickle_files:
-    print "\nProcessing cross-correlations of file: " + pickle_file
+    print("\nProcessing cross-correlations of file: " + pickle_file)
     xc = pscrosscorr.load_pickled_xcorr(pickle_file)
 
     # copying the suffix of cross-correlations file
@@ -98,5 +98,8 @@ for pickle_file in pickle_files:
     # freq (default is given by parameter *USE_INSTANTANEOUS_FREQ*)
     #
     # See other options in the docstring of the function.
+
+    if not os.path.exists(FTAN_DIR):  # maybe not necessary?
+        os.makedirs(FTAN_DIR)
 
     xc.FTANs(suffix=suffix, whiten=False, normalize_ampl=True, logscale=True)
