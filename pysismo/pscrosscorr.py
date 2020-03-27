@@ -614,7 +614,7 @@ class CrossCorrelation:
             xy = (t, ylim[0] + 0.1 * (ylim[1] - ylim[0]))
             axlist[0].annotate(s='{} km/s'.format(v), xy=xy, xytext=xy,
                                horizontalalignment=align, fontsize=8,
-                               bbox={'color': 'k', 'facecolor': 'white'})
+                               bbox={'edgecolor': 'k', 'facecolor': 'white'})
 
         # noise window
         axlist[0].fill_between(x=tnoise, y1=[ylim[1], ylim[1]],
@@ -629,7 +629,7 @@ class CrossCorrelation:
                        s="Original data, SNR = {:.1f}".format(float(SNR)),
                        fontsize=9,
                        horizontalalignment='right',
-                       bbox={'color': 'k', 'facecolor': 'white'})
+                       bbox={'edgecolor': 'k', 'facecolor': 'white'})
 
         # formatting axes
         axlist[0].set_xlim(xlim)
@@ -677,7 +677,7 @@ class CrossCorrelation:
                     s="{} - {} s, SNR = {:.1f}".format(tmin, tmax, SNR),
                     fontsize=9,
                     horizontalalignment='right',
-                    bbox={'color': 'k', 'facecolor': 'white'})
+                    bbox={'edgecolor': 'k', 'facecolor': 'white'})
 
             if lastplot:
                 # adding label to signalwindows
@@ -686,7 +686,7 @@ class CrossCorrelation:
                         s="Signal window",
                         horizontalalignment='center',
                         fontsize=8,
-                        bbox={'color': 'k', 'facecolor': 'white'})
+                        bbox={'edgecolor': 'k', 'facecolor': 'white'})
 
                 # adding label to noise windows
                 ax.text(x=sum(tnoise) / 2,
@@ -694,7 +694,7 @@ class CrossCorrelation:
                         s="Noise window",
                         horizontalalignment='center',
                         fontsize=8,
-                        bbox={'color': 'k', 'facecolor': 'white'})
+                        bbox={'edgecolor': 'k', 'facecolor': 'white'})
 
             # formatting axes
             ax.set_xlim(xlim)
@@ -1283,7 +1283,7 @@ class CrossCorrelation:
         x = (xlim[0] + xlim[1]) / 2.0
         y = ylim[0] + 0.05 * (ylim[1] - ylim[0])
         ax.text(x, y, "Raw FTAN", fontsize=12,
-                bbox={'color': 'k', 'facecolor': 'white', 'lw': 0.5},
+                bbox={'edgecolor': 'k', 'facecolor': 'white', 'lw': 0.5},
                 horizontalalignment='center',
                 verticalalignment='center')
         ax.set_xlim(xlim)
@@ -1335,7 +1335,7 @@ class CrossCorrelation:
         x = (xlim[0] + xlim[1]) / 2.0
         y = ylim[0] + 0.05 * (ylim[1] - ylim[0])
         ax.text(x, y, "Clean FTAN", fontsize=12,
-                bbox={'color': 'k', 'facecolor': 'white', 'lw': 0.5},
+                bbox={'edgecolor': 'k', 'facecolor': 'white', 'lw': 0.5},
                 horizontalalignment='center',
                 verticalalignment='center')
         # plotting cut-off period
@@ -1369,11 +1369,19 @@ class CrossCorrelation:
         if rawvg.nom2inst_periods or cleanvg.nom2inst_periods:
             ax = fig.add_subplot(gs5[0, 0])
             if rawvg.nom2inst_periods:
-                nomperiods, instperiods = zip(*rawvg.nom2inst_periods)
-                ax.plot(nomperiods, instperiods, '-', label='raw FTAN')
+                try:
+                    nomperiods, instperiods = list(zip(*list(rawvg.nom2inst_periods)))
+                    rawvg.nom2inst_periods = zip(nomperiods, instperiods)
+                    ax.plot(nomperiods, instperiods, '-', label='raw FTAN')
+                except ValueError:
+                    pass
             if cleanvg.nom2inst_periods:
-                nomperiods, instperiods = zip(*cleanvg.nom2inst_periods)
-                ax.plot(nomperiods, instperiods, '-', label='clean FTAN')
+                try:
+                    nomperiods, instperiods = list(zip(*list(cleanvg.nom2inst_periods)))
+                    cleanvg.nom2inst_periods = zip(nomperiods,instperiods)
+                    ax.plot(nomperiods, instperiods, '-', label='clean FTAN')
+                except ValueError:
+                    pass
 
             ax.set_xlabel('Nominal period (s)')
             ax.set_ylabel('Instantaneous period (s)')
@@ -2523,7 +2531,7 @@ def load_pickled_xcorr(pickle_file):
     @type pickle_file: str or unicode
     @rtype: L{CrossCorrelationCollection}
     """
-    f = open(name=pickle_file, mode='rb')
+    f = open(pickle_file,'rb')
     xc = pickle.load(f)
     f.close()
     return xc
