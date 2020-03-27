@@ -81,12 +81,12 @@ from pysismo.psconfig import FTAN_DIR, TOMO_DIR
 
 # selecting dispersion curves
 flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*.pickle*')))
-print 'Select file(s) containing dispersion curves to process: [All except backups]'
-print '0 - All except backups (*~)'
-print '\n'.join('{} - {}'.format(i + 1, os.path.basename(f))
-                for i, f in enumerate(flist))
+print('Select file(s) containing dispersion curves to process: [All except backups]')
+print('0 - All except backups (*~)')
+for i,f in enumerate(flist):
+    print('{} - {}'.format(i+1, os.path.basename(f)))
 
-res = raw_input('\n')
+res = input('\n')
 if not res:
     pickle_files = [f for f in flist if f[-1] != '~']
 else:
@@ -94,7 +94,7 @@ else:
 
 # loop on pickled curves
 for pickle_file in pickle_files:
-    print "\nProcessing dispersion curves of file: " + pickle_file
+    print("\nProcessing dispersion curves of file: " + pickle_file)
 
     f = open(pickle_file, 'rb')
     curves = pickle.load(f)
@@ -107,7 +107,7 @@ for pickle_file in pickle_files:
         pass
     basename = os.path.basename(pickle_file).replace('FTAN', 'testparams-tomography')
     pdfname = os.path.join(TOMO_DIR, os.path.splitext(basename)[0]) + '.pdf'
-    print "Maps will be exported to pdf file: " + pdfname
+    print("Maps will be exported to pdf file: " + pdfname)
     if os.path.exists(pdfname):
         # backup
         shutil.copyfile(pdfname, pdfname + '~')
@@ -121,7 +121,7 @@ for pickle_file in pickle_files:
     for period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_ in param_lists:
         s = ("Period = {} s, grid step = {}, min SNR = {}, corr. length "
              "= {} km, alpha = {}, beta = {}, lambda = {}")
-        print s.format(period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_)
+        print(s.format(period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_))
 
         # Performing the tomographic inversion to produce a velocity map
         # at period = *period* , with parameters given above:
@@ -179,5 +179,5 @@ for pickle_file in pickle_files:
         return period
 
     pagesgroups = psutils.groupbykey(pagenbs, key=key)
-    print "\nMerging pages of pdf..."
+    print("\nMerging pages of pdf...")
     psutils.combine_pdf_pages(pdfname, pagesgroups, verbose=True)
