@@ -286,7 +286,7 @@ class CrossCorrelation:
         xcout = self if inplace else self.copy()
 
         n = len(xcout.timearray)
-        mid = (n - 1) / 2
+        mid = int((n - 1) / 2)
 
         # verifying that time array is symmetric wrt 0
         if n % 2 != 1:
@@ -500,7 +500,7 @@ class CrossCorrelation:
         vkwargs = {
             'fontsize': 8,
             'horizontalalignment': 'center',
-            'bbox': dict(color='k', facecolor='white')}
+            'bbox': dict(edgecolor='k', facecolor='white')}
         if vmin:
             ylim = plt.ylim()
             plt.plot(2 * [xcout.dist() / vmin], ylim, color='grey')
