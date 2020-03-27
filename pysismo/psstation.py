@@ -385,8 +385,8 @@ def get_paz(channelid, t, inventories):
 
     for inv in inventories:
         try:
-            if hasattr(inv, 'getPAZ'):
-                paz = inv.getPAZ(channelid, t)
+            if hasattr(inv, 'get_paz'):
+                paz = inv.get_paz(channelid, t)
             else:
                 assert channelid == inv['channelid']
                 assert not inv['startdate'] or t >= inv['startdate']

@@ -1449,7 +1449,7 @@ class CrossCorrelation:
         @rtype: int
         """
         nt = len(self.timearray)
-        return (nt - 1) / 2 if not self.symmetrized else nt - 1
+        return int((nt - 1) / 2) if not self.symmetrized else int(nt - 1)
 
     def _get_monthyears_xcdataarray(self, months=None):
         """
@@ -1717,7 +1717,7 @@ class CrossCorrelationCollection(AttribDict):
         elif plot_type == 'distance':
             maxdist = max(self[x][y].dist() for (x, y) in pairs)
             corr2km = maxdist / 30.0
-            cc = mpl.rcParams['axes.color_cycle']  # color cycle
+            cc = [color['color'] for color in list(mpl.rcParams['axes.prop_cycle'])]  # color cycle
 
             # sorting pairs by distance
             pairs.sort(key=lambda s12: self[s12[0]][s12[1]].dist())
@@ -1842,7 +1842,7 @@ class CrossCorrelationCollection(AttribDict):
         minperiod = min(periodarray)
 
         # color cycle
-        cc = mpl.rcParams['axes.color_cycle']
+        cc = mpl.rcParams['axes.prop_cycle']
 
         # plotting SNR arrays
         plt.figure()
@@ -2413,7 +2413,7 @@ def preprocess_trace(trace, paz=None, freqmin=FREQMIN, freqmax=FREQMAX,
             factor = int(np.ceil(trace.stats.sampling_rate / 10))
             trace.decimate(factor=factor, no_filter=True)
         trace.simulate(paz_remove=paz,
-                       paz_simulate=obspy.signal.cornFreq2Paz(0.01),
+                       paz_simulate=obspy.signal.invsim.corn_freq_2_paz(0.01),
                        remove_sensitivity=True,
                        simulate_sensitivity=True,
                        nfft_pow2=True)
