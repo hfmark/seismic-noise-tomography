@@ -71,9 +71,9 @@
 # So, there is one sub-directory per month, and inside it, one miniseed
 # file per month and per station.
 
-MSEED_DIR = ../mseed_clean
+MSEED_DIR = ../seed/1P_mn
 STATIONXML_DIR = ../StationXML_files
-DATALESS_DIR = ../dataless_seed
+DATALESS_DIR = ../seed/dataless
 
 # dir of cross-correlation results
 CROSSCORR_DIR = ./output/cross-correlation
@@ -149,10 +149,9 @@ USE_STATIONXML = False
 
 # first day of cross-correlation (d/m/y)
 FIRSTDAY = 04/11/2018
-
 # last day of cross-correlation (d/m/y)
-#LASTDAY = 10/03/2019
-LASTDAY = 31/12/2018
+LASTDAY = 31/10/2019
+
 # minimum data fill within day
 MINFILL = 0.99
 
