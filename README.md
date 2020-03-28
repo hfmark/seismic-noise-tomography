@@ -9,19 +9,21 @@ Requirements
 The code is developped and tested on Ubuntu (but should run on other platforms as well)
 with Python 2.7.
 
+slowly being updated for python 3.7 compatibility - HFM 03.6.2020
+
 In addition to [Python 2.7](https://www.python.org/download/releases/2.7/), you need
-to install the following packages:
+to install the following packages:  ** make that 3.7, actually
 
 - [numpy](http://www.numpy.org/) >= 1.8.2
 - [scipy](http://www.scipy.org/) >= 0.13.3
-- [matplotlib](http://matplotlib.org/) >= 1.3.1
-- [ObsPy](https://github.com/obspy/obspy/wiki) >= 0.9.2
+- [matplotlib](http://matplotlib.org/) >= 1.3.1  ** now >2? or 3? HFM 03.27.2020
+- [ObsPy](https://github.com/obspy/obspy/wiki) >= 0.9.2  ** later version needed
 - [pyshp](https://github.com/GeospatialPython/pyshp)
 - [pyproj](https://code.google.com/p/pyproj/) >= 1.8.9
-- [pyPdf](http://pybrary.net/pyPdf/)
+- [pyPdf](http://pybrary.net/pyPdf/)  ** now PyPDF2 - HFM 03.26.2020
 
 It is recommended to install these packages with `pip install ...` or with your
-favourite package manager, e.g., `apt-get install ...`.
+favourite package manager, e.g., `apt-get install ...`.  ** personally, I'd recommend anaconda
 
 Optionally, you may want to install the 
 [Computer Programs in Seismology](http://www.eas.slu.edu/eqc/eqccps.html)
