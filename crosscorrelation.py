@@ -211,7 +211,7 @@ for date in dates:
                 print("\nExporting cross-correlations calculated until now to: " + f.name)
                 pickle.dump(xc, f, protocol=2)
         except FileNotFoundError:
-            os.makedirs(DATALESS_DIR)
+            os.makedirs(CROSSCORR_DIR)
             with open(u'{}.part.pickle'.format(OUTFILESPATH), 'wb') as f:
                 print("\nExporting cross-correlations calculated until now to: " + f.name)
                 pickle.dump(xc, f, protocol=2)
