@@ -1782,7 +1782,7 @@ class CrossCorrelationCollection(AttribDict):
                              t1=xcplot.startday.strftime('%d/%m/%y'),
                              t2=xcplot.endday.strftime('%d/%m/%y'))
 
-                bbox = {'color': color, 'facecolor': 'white', 'alpha': 0.9}
+                bbox = {'edgecolor': color, 'facecolor': 'white', 'alpha': 0.9}
                 arrowprops = {'arrowstyle': "-", 'relpos': relpos, 'color': color}
 
                 plt.annotate(s=s, xy=xyarrow, xytext=xytext, fontsize=9,
@@ -1874,7 +1874,7 @@ class CrossCorrelationCollection(AttribDict):
             s = s.format(i=ipair, net1=net1, s1=s1, net2=net2, s2=s2,
                          dist=xc.dist(), nday=xc.nday)
 
-            bbox = {'color': color, 'facecolor': 'white', 'alpha': 0.9}
+            bbox = {'edgecolor': color, 'facecolor': 'white', 'alpha': 0.9}
             arrowprops = {'arrowstyle': '-', 'relpos': relpos, 'color': color}
 
             plt.annotate(s=s, xy=xyarrow, xytext=xytext, fontsize=9,
