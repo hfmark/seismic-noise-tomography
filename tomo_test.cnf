@@ -199,7 +199,7 @@ PERIOD_BANDS = [[4, 7], [7, 15], [10, 22], [15, 30], [20, 35]]
 # - the noise window has a fixed size and starts after a fixed trailing
 #   time from the end of the signal window
 
-SIGNAL_WINDOW_VMIN = 2.0
+SIGNAL_WINDOW_VMIN = 1.7
 SIGNAL_WINDOW_VMAX = 4.0
 SIGNAL2NOISE_TRAIL = 500.0
 NOISE_WINDOW_SIZE = 500.0
@@ -208,7 +208,7 @@ NOISE_WINDOW_SIZE = 500.0
 
 RAWFTAN_PERIODS_STARTSTOPSTEP = [3.0, 45.1, 1.0]
 CLEANFTAN_PERIODS_STARTSTOPSTEP = [3.0, 45.1, 1.0]
-FTAN_VELOCITIES_STARTSTOPSTEP = [2.0, 5.51, 0.01]
+FTAN_VELOCITIES_STARTSTOPSTEP = [1.7, 5.21, 0.01]
 
 # default width parameter of the narrow Gaussian bandpass filters
 # applied in the FTAN. The bandpass filters take the form:
