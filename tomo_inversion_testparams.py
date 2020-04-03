@@ -71,10 +71,10 @@ import itertools as it
 PERIODS = [10.0, 20.0]
 GRID_STEPS = [1.0]
 MINPECTSNRS = [7.0]
-CORR_LENGTHS = [50, 150, 250]
-ALPHAS = [200, 400, 600]
-BETAS = [200]
-LAMBDAS = [0.3]
+CORR_LENGTHS = [50, 100, 150, 250]
+ALPHAS = [200, 400, 600, 800]
+BETAS = [50, 100, 200]
+LAMBDAS = [0.15, 0.3, 0.4]
 
 # parsing configuration file to import dirs
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
