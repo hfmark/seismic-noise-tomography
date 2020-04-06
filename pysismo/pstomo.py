@@ -68,6 +68,23 @@ for x, r, g, b in zip(values, reds, greens, blues):
 CMAP_RESOLUTION = LinearSegmentedColormap('customresolution', cdict)
 CMAP_RESOLUTION.set_bad(color='0.85')
 
+# custom color map for masking resolution
+# ---------------------------------------
+colors = ['white','white']
+values = [0, 1.0]
+alphas = [0.,0.]
+rgblist = [c.to_rgb(s) for s in colors]
+reds, greens, blues = zip(*rgblist)
+cdict = {}
+for x, r, g, b, al in zip(values, reds, greens, blues, alphas):
+    v = (x - min(values)) / (max(values) - min(values))
+    cdict.setdefault('red', []).append((v, r, r))
+    cdict.setdefault('green', []).append((v, g, g))
+    cdict.setdefault('blue', []).append((v, b, b))
+    cdict.setdefault('alpha',[]).append((v,al,al))
+CMAP_MASK = LinearSegmentedColormap('customresolution', cdict)
+CMAP_MASK.set_bad(color='k',alpha=.3)
+
 # custom color map for path density
 # ---------------------------------------
 colors = ['white', 'cyan', 'green', 'yellow', 'red', 'black']
@@ -1346,11 +1363,16 @@ class VelocityMap:
             maxdv = np.abs(v - vmean).max()
             vscale = (vmean - maxdv, vmean + maxdv)
 
+        # plotting spatial resolution as an overlay
+        r = self.grid.to_2D_array(self.Rradius)
+
         extent = (self.grid.xmin, self.grid.get_xmax(),
                   self.grid.ymin, self.grid.get_ymax())
         m = ax.imshow(v.transpose(), origin='bottom', extent=extent,
                       interpolation='bicubic', cmap=CMAP_SEISMIC,
                       vmin=vscale[0], vmax=vscale[1])
+        m1 = ax.imshow(r.transpose(), origin='bottom', extent=extent,
+                      interpolation='bicubic',cmap=CMAP_MASK)
         c = plt.colorbar(m, ax=ax, orientation='horizontal', pad=0.1)
         c.set_label('Velocity perturbation (%)' if perturbation else 'Velocity (km/s)')
 
