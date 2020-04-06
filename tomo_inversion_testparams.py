@@ -69,11 +69,11 @@ import itertools as it
 
 # inversion parameters to vary
 PERIODS = [10.0, 20.0]
-GRID_STEPS = [1.0]
+GRID_STEPS = [0.3]
 MINPECTSNRS = [7.0]
-CORR_LENGTHS = [50, 100, 150]
-ALPHAS = [200, 800]
-BETAS = [50, 100]
+CORR_LENGTHS = [50, 150]
+ALPHAS = [100, 200]
+BETAS = [20, 80]
 LAMBDAS = [0.15, 0.3]
 
 # parsing configuration file to import dirs
