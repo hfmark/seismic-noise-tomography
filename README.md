@@ -6,24 +6,28 @@ such as [numpy](http://www.numpy.org/) and [scipy](http://www.scipy.org/).
 
 Requirements
 ------------
-The code is developped and tested on Ubuntu (but should run on other platforms as well)
+The code was developped and tested on Ubuntu (but should run on other platforms as well)
 with Python 2.7.
 
-slowly being updated for python 3.7 compatibility - HFM 03.6.2020
+As of April 2020, it is updated for Python 3.7 and these updates are not backwards-compatible
+to 2.7 (HFM).
 
-In addition to [Python 2.7](https://www.python.org/download/releases/2.7/), you need
-to install the following packages:  ** make that 3.7, actually
 
-- [numpy](http://www.numpy.org/) >= 1.8.2
-- [scipy](http://www.scipy.org/) >= 0.13.3
-- [matplotlib](http://matplotlib.org/) >= 1.3.1  ** now >2? or 3? HFM 03.27.2020
-- [ObsPy](https://github.com/obspy/obspy/wiki) >= 0.9.2  ** later version needed
-- [pyshp](https://github.com/GeospatialPython/pyshp)
-- [pyproj](https://code.google.com/p/pyproj/) >= 1.8.9
-- [pyPdf](http://pybrary.net/pyPdf/)  ** now PyPDF2 - HFM 03.26.2020
+Python 3.7.6 has been tested/is recommended, but other releases of Python 3 should work. 
+In addition to [Python 3](https://www.python.org/downloads), you need
+to install the following packages:
 
-It is recommended to install these packages with `pip install ...` or with your
-favourite package manager, e.g., `apt-get install ...`.  ** personally, I'd recommend anaconda
+- [numpy](http://www.numpy.org/) >= 1.18.2
+- [scipy](http://www.scipy.org/) >= 1.4.1
+- [matplotlib](http://matplotlib.org/) >= 3.2.1
+- [ObsPy](https://github.com/obspy/obspy/wiki) >= 1.2.1
+- [pyshp](https://github.com/GeospatialPython/pyshp) >= 2.1.0
+- [pyproj](https://github.com/pyproj4/pyproj) >= 2.6.0
+- [PyPDF2](http://mstamy2.github.io/PyPDF2/) >= 1.26.0
+
+Installation of packages in a conda environment is highly recommended 
+[Anaconda](https://www.anaconda.com/distribution/). Some of the packages are only available
+on the conda-forge channel.
 
 Optionally, you may want to install the 
 [Computer Programs in Seismology](http://www.eas.slu.edu/eqc/eqccps.html)
@@ -59,6 +63,7 @@ dispersion curves,
 - `1d_models.py` takes dispersion maps as input and invert them for a 1-D
   shear velocity model at selected locations, using a Markov chain Monte Carlo
   method to sample to posterior distribution of the model's parameters.
+*note that this last script has not yet been updated/tested with 3.7*
  
 The scripts rely on the Python package `pysismo`, which must thus be located
 in a place included in your PATH (or PYTHONPATH) environment variable. The easiest
