@@ -79,15 +79,15 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 # periods
-PERIODS = [6.0, 10.0, 16.0, 20.0, 23.0]
+PERIODS = [8.0, 14.0, 20.0, 26.0]
 # PERIODS = range(10, 31)
 
 # parameters for the 1st and 2nd pass, respectively
-GRID_STEPS = (1.0, 1.0)
+GRID_STEPS = (0.3, 0.3)
 MINPECTSNRS = (7.0, 7.0)
-CORR_LENGTHS = (150, 150)
-ALPHAS = (3000, 400)
-BETAS = (200, 200)
+CORR_LENGTHS = (50, 50)
+ALPHAS = (600, 200)
+BETAS = (100, 100)
 LAMBDAS = (0.3, 0.3)
 
 # stations to skip (if any)
