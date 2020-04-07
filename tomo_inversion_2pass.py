@@ -109,7 +109,7 @@ if not res:
 else:
     pickle_files = [flist[int(i)-1] for i in res.split()]
 
-usersuffix = raw_input("\nEnter suffix to append: [none]\n").strip()
+usersuffix = input("\nEnter suffix to append: [none]\n").strip()
 
 # loop on pickled curves
 for pickle_file in pickle_files:
