@@ -101,7 +101,7 @@ flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*.pickle*')))
 print('Select file(s) containing dispersion curves to process: [All except backups]')
 print('0 - All except backups (*~)')
 for i,f in enumerate(flist):
-    print('{} - {}'.format(i+1, os.path.basename(f)))_
+    print('{} - {}'.format(i+1, os.path.basename(f)))
 
 res = input('\n')
 if not res:
@@ -109,7 +109,7 @@ if not res:
 else:
     pickle_files = [flist[int(i)-1] for i in res.split()]
 
-usersuffix = raw_input("\nEnter suffix to append: [none]\n").strip()
+usersuffix = input("\nEnter suffix to append: [none]\n").strip()
 
 # loop on pickled curves
 for pickle_file in pickle_files:
@@ -153,10 +153,10 @@ for pickle_file in pickle_files:
         for passnb in (0, 1):
             s = ("{} pass (rejecting {} pairs): grid step = {}, min SNR = {}, "
                  "corr. length = {} km, alpha = {}, beta = {}, lambda = {}")
-            print(s.format('1st' if passnb == 0 else '2nd', len(skippairs),)
+            print(s.format('1st' if passnb == 0 else '2nd', len(skippairs),
                            GRID_STEPS[passnb], MINPECTSNRS[passnb],
                            CORR_LENGTHS[passnb], ALPHAS[passnb],
-                           BETAS[passnb], LAMBDAS[passnb])
+                           BETAS[passnb], LAMBDAS[passnb]))
 
             # Performing the tomographic inversion to produce a velocity map
             # at period = *period* , with parameters given above:
