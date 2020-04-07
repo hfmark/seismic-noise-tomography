@@ -101,7 +101,7 @@ flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*.pickle*')))
 print('Select file(s) containing dispersion curves to process: [All except backups]')
 print('0 - All except backups (*~)')
 for i,f in enumerate(flist):
-    print('{} - {}'.format(i+1, os.path.basename(f)))_
+    print('{} - {}'.format(i+1, os.path.basename(f)))
 
 res = input('\n')
 if not res:
