@@ -6,12 +6,10 @@ such as [numpy](http://www.numpy.org/) and [scipy](http://www.scipy.org/).
 
 Requirements
 ------------
-The code was developped and tested on Ubuntu (but should run on other platforms as well)
-with Python 2.7.
+The code was developed and tested on Ubuntu (but should run on other platforms as well).
 
 As of April 2020, it is updated for Python 3.7 and these updates are not backwards-compatible
 to 2.7 (HFM).
-
 
 Python 3.7.6 has been tested/is recommended, but other releases of Python 3 should work. 
 In addition to [Python 3](https://www.python.org/downloads), you need
@@ -25,9 +23,8 @@ to install the following packages:
 - [pyproj](https://github.com/pyproj4/pyproj) >= 2.6.0
 - [PyPDF2](http://mstamy2.github.io/PyPDF2/) >= 1.26.0
 
-Installation of packages in a conda environment is highly recommended 
-[Anaconda](https://www.anaconda.com/distribution/). Some of the packages are only available
-on the conda-forge channel.
+Installation of packages in a [conda](https://www.anaconda.com/distribution/) environment 
+is highly recommended. Some of the packages are only available on the conda-forge channel.
 
 Optionally, you may want to install the 
 [Computer Programs in Seismology](http://www.eas.slu.edu/eqc/eqccps.html)
@@ -36,11 +33,11 @@ as these programs take care of the forward modelling.
 
 How to start
 ------------
-You should start reading the example configuration file, `tomo_Brazil.cnf`, which
+You should start reading the example configuration file, `tomo_test.cnf`, which
 contains global parameters and detailed instructions. You should then create 
 your own configuration file (any name with cnf extension, \*.cnf) with your
 own parameters, and place it in the same folder as the scripts. It is not advised
-to simply modify `tomo_Brazil.cnf`, as any update may revert your changes.
+to simply modify `tomo_test.cnf`, as any update may revert your changes.
 
 You may then use the scripts in the following order:
 
@@ -63,7 +60,7 @@ dispersion curves,
 - `1d_models.py` takes dispersion maps as input and invert them for a 1-D
   shear velocity model at selected locations, using a Markov chain Monte Carlo
   method to sample to posterior distribution of the model's parameters.
-*note that this last script has not yet been updated/tested with 3.7*
+*Note that this last script has not yet been updated/tested with 3.7*
  
 The scripts rely on the Python package `pysismo`, which must thus be located
 in a place included in your PATH (or PYTHONPATH) environment variable. The easiest
@@ -76,7 +73,7 @@ updates. These will be backward-compatible, **except if new parameters appear
 in the configuration file**.
 
 **In other words, after any update, you should check whether new parameters were added
-to the example configuration file (`tomo_Brazil.cnf`) and insert them accordingly
+to the example configuration file (`tomo_test.cnf`) and insert them accordingly
 to your own configuration file.**
 
 References
