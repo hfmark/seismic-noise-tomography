@@ -59,7 +59,7 @@ The results are exported in a pdf file in dir *TOMO_DIR*
 """
 
 from pysismo import pstomo, psutils
-import os
+import os, sys
 import shutil
 import glob
 import pickle
@@ -172,12 +172,12 @@ for pickle_file in pickle_files:
     pdf.close()
 
     # merging pages of pdf with similar period
-    pagenbs = range(len(param_lists))
+    #pagenbs = range(len(param_lists))
 
-    def key(pagenb):
-        period = param_lists[pagenb][0]
-        return period
+    #def key(pagenb):
+    #    period = param_lists[pagenb][0]
+    #    return period
 
-    pagesgroups = psutils.groupbykey(pagenbs, key=key)
-    print("\nMerging pages of pdf...")
-    psutils.combine_pdf_pages(pdfname, pagesgroups, verbose=True)
+    #pagesgroups = psutils.groupbykey(pagenbs, key=key)
+    #print("\nMerging pages of pdf...")
+    #psutils.combine_pdf_pages(pdfname, pagesgroups, verbose=True)
