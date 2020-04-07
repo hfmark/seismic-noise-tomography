@@ -153,10 +153,10 @@ for pickle_file in pickle_files:
         for passnb in (0, 1):
             s = ("{} pass (rejecting {} pairs): grid step = {}, min SNR = {}, "
                  "corr. length = {} km, alpha = {}, beta = {}, lambda = {}")
-            print(s.format('1st' if passnb == 0 else '2nd', len(skippairs),)
+            print(s.format('1st' if passnb == 0 else '2nd', len(skippairs),
                            GRID_STEPS[passnb], MINPECTSNRS[passnb],
                            CORR_LENGTHS[passnb], ALPHAS[passnb],
-                           BETAS[passnb], LAMBDAS[passnb])
+                           BETAS[passnb], LAMBDAS[passnb]))
 
             # Performing the tomographic inversion to produce a velocity map
             # at period = *period* , with parameters given above:
