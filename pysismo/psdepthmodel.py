@@ -7,7 +7,7 @@ must be installed in *COMPUTER_PROGRAMS_IN_SEISMOLOGY_DIR*
 
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, sys
 import shutil
 import itertools as it
 from easyprocess import EasyProcess
@@ -186,6 +186,56 @@ class VsModel:
 
         if fig:
             fig.show()
+
+
+def Rayleigh_phase_velocities(periods, modelfile):
+    """
+    Returns the array of Rayleigh wave phase velocities at
+    selected periods, using the 1D earth model in modelfile.
+    If modelfile is an array instead of a filename, assume it 
+    contains [dz,Vp,Vs,rho] and make a modelfile instead.
+    """
+
+    if not COMPUTER_PROGRAMS_IN_SEISMOLOGY_DIR:
+        raise Exception("Please provide the dir of CPS")
+
+    # make and move to temporary dir
+    current_dir = os.getcwd()
+    tmp_dir = tempfile.mkdtemp()
+    os.chdir(tmp_dir)
+
+    # prepare input files
+    if type(modelfile) == np.ndarray:
+        print('writing a model file; assuming array columns are dz, Vp, Vs, rho')
+        assert modelfile.shape[1] == 4, 'model input has to have 4 columns'
+        create_model_file('model',modelfile[:,0],modelfile[:,1],modelfile[:,2],modelfile[:,3])
+        modelfile = 'model'
+    else:
+        shutil.copyfile(os.path.join(current_dir,modelfile),'model')
+    f = open('periods','w')
+    f.write('\n'.join([str(p) for p in periods]))
+    f.close()
+
+    # prepare model
+    cmd = os.path.join(os.path.expanduser(COMPUTER_PROGRAMS_IN_SEISMOLOGY_DIR), 'sprep96')
+    p = EasyProcess('"{}" -M model -PARR periods -NMOD 1 -R > junk'.format(cmd)).call()
+
+    # get phase velocity dispersion curve
+    cmd = os.path.join(os.path.expanduser(COMPUTER_PROGRAMS_IN_SEISMOLOGY_DIR), 'sdisp96')
+    p = EasyProcess('"{}" > junk'.format(cmd)).call()
+
+    # export to an ascii file
+    cmd = os.path.join(os.path.expanduser(COMPUTER_PROGRAMS_IN_SEISMOLOGY_DIR), 'sdpsrf96')
+    p = EasyProcess('"{}" -R -PER -ASC > junk'.format(cmd)).call()
+
+    # read the phase velocities from the ascii file
+    vp = np.loadtxt('SDISPR.ASC',skiprows=1,usecols=(4,))
+
+    # removing temp dir
+    os.chdir(current_dir)
+    shutil.rmtree(tmp_dir)
+
+    return vp
 
 
 def Rayleigh_group_velocities(periods, dz, vp, vs, rho, verbose=False):

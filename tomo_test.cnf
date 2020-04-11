@@ -222,6 +222,9 @@ FTAN_ALPHA = 20
 # the dispersion curve seeks to minimize
 STRENGTH_SMOOTHING = 1.0
 
+# path to model96 file for CPS for calculating phase velocities/matching N
+MODEL96_FILE = ./tak135sph.mod
+
 # replace nominal frequency (i.e., center frequency of Gaussian filters)
 # with instantaneous frequency (i.e., dphi/dt(t=arrival time) with phi the
 # phase of the filtered analytic signal), in the FTAN and dispersion curves?

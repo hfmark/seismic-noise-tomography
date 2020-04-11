@@ -5,7 +5,7 @@ processing, such as frequency-time analysis (FTAN) to measure
 dispersion curves.
 """
 
-from pysismo import pserrors, psstation, psutils, pstomo
+from pysismo import pserrors, psstation, psutils, pstomo, psdepthmodel
 import obspy.signal
 import obspy.io.xseed
 import obspy.signal.cross_correlation
@@ -44,7 +44,8 @@ from pysismo.psconfig import (
     SIGNAL_WINDOW_VMIN, SIGNAL_WINDOW_VMAX, SIGNAL2NOISE_TRAIL, NOISE_WINDOW_SIZE,
     RAWFTAN_PERIODS, CLEANFTAN_PERIODS, FTAN_VELOCITIES, FTAN_ALPHA, STRENGTH_SMOOTHING,
     USE_INSTANTANEOUS_FREQ, MAX_RELDIFF_INST_NOMINAL_PERIOD, MIN_INST_PERIOD,
-    HALFWINDOW_MEDIAN_PERIOD, MAX_RELDIFF_INST_MEDIAN_PERIOD, BBOX_LARGE, BBOX_SMALL)
+    HALFWINDOW_MEDIAN_PERIOD, MAX_RELDIFF_INST_MEDIAN_PERIOD, BBOX_LARGE, BBOX_SMALL,
+    MODEL96_FILE)
 
 # ========================
 # Constants and parameters
@@ -720,7 +721,7 @@ class CrossCorrelation:
     def FTAN(self, whiten=False, phase_corr=None, months=None, vgarray_init=None,
              optimize_curve=None, strength_smoothing=STRENGTH_SMOOTHING,
              use_inst_freq=USE_INSTANTANEOUS_FREQ, vg_at_nominal_freq=None,
-             debug=False):
+             debug=False,model96=MODEL96_FILE):
         """
         Frequency-time analysis of a cross-correlation function.
 
@@ -929,13 +930,50 @@ class CrossCorrelation:
             # list of (nominal period, inst period)
             nom2inst_periods = zip(ftan_periods, inst_periods)
 
+        # now that we have group velocities sorted as best we can,
+        # track that in the phase array
+        ph_curve = np.zeros(vgarray.shape)*np.nan
+        for ip in range(len(ftan_periods)):
+            fph = np.interp(x=vgarray,
+                            xp=FTAN_VELOCITIES,
+                            fp=phase_resampled[ip],
+                            left=np.nan,
+                            right=np.nan)
+            ph_curve[ip] = fph[ip]
+
+        # get a dispersion curve for a 1D model for comparison
+        vp_ideal = psdepthmodel.Rayleigh_phase_velocities(ftan_periods,modelfile=model96)
+
+        # for several N values, calculate phase velocity dispersion curve and see
+        # how close it is to the model one
+        N_vals = np.arange(-2,3)
+        vpcurves_N = np.zeros((len(N_vals),len(vgarray)))
+        mse = np.zeros(N_vals.shape)*np.nan
+        freqdist = (1/ftan_periods)*self.dist()
+        for nn in range(len(N_vals)):
+            vpcurves_N[nn] = ((freqdist**-1)*(ph_curve + np.pi/4 + 2*np.pi*N_vals[nn]) + \
+                             1./vgarray)**-1
+            outside_ind = np.where(np.logical_or(vpcurves_N[nn] < min(FTAN_VELOCITIES), 
+                                   vpcurves_N[nn] > max(FTAN_VELOCITIES)))
+            vpcurves_N[nn][outside_ind] = np.nan
+            mse[nn] = np.nanmean((vpcurves_N[nn] - vp_ideal)**2)
+        Nind = np.where(mse==np.nanmin(mse))[0][0]
+
         vgcurve = pstomo.DispersionCurve(periods=ftan_periods,
                                          v=vgarray,
                                          station1=self.station1,
                                          station2=self.station2,
                                          nom2inst_periods=nom2inst_periods)
 
-        return ampl_resampled, phase_resampled, vgcurve
+        vpcurve = pstomo.DispersionCurve(periods=ftan_periods,
+                                         v=vpcurves_N[Nind],
+                                         station1=self.station1,
+                                         station2=self.station2,
+                                         nom2inst_periods=nom2inst_periods,
+                                         vtype='phase',
+                                         Nval=N_vals[Nind])
+
+        return ampl_resampled, phase_resampled, vgcurve, vpcurve
 
     def FTAN_complete(self, whiten=False, months=None, add_SNRs=True,
                       vmin=SIGNAL_WINDOW_VMIN, vmax=SIGNAL_WINDOW_VMAX,
@@ -1002,7 +1040,7 @@ class CrossCorrelation:
         # raw FTAN (no need to whiten any more)
         rawvg_init = np.zeros_like(RAWFTAN_PERIODS)
         try:
-            rawampl, _, rawvg = xc.FTAN(whiten=False,
+            rawampl, _, rawvg, rawvp = xc.FTAN(whiten=False,
                                         months=months,
                                         optimize_curve=optimize_curve,
                                         strength_smoothing=strength_smoothing,
@@ -1022,7 +1060,15 @@ class CrossCorrelation:
                                              v=np.nan * np.zeros(len(CLEANFTAN_PERIODS)),
                                              station1=self.station1,
                                              station2=self.station2)
-            return rawampl, rawvg, cleanampl, cleanvg
+            rawvp = pstomo.DispersionCurve(periods=RAWFTAN_PERIODS,
+                                           v=np.nan * np.zeros(len(RAWFTAN_PERIODS)),
+                                           station1=self.station1,
+                                           station2=self.station2)
+            cleanvp = pstomo.DispersionCurve(periods=CLEANFTAN_PERIODS,
+                                             v=np.nan * np.zeros(len(CLEANFTAN_PERIODS)),
+                                             station1=self.station1,
+                                             station2=self.station2)
+            return rawampl, rawvg, rawvp, cleanampl, cleanvg, cleanvp
 
         # phase function from raw vg curve
         phase_corr = xc.phase_func(vgcurve=rawvg)
@@ -1030,7 +1076,7 @@ class CrossCorrelation:
         # clean FTAN
         cleanvg_init = np.zeros_like(CLEANFTAN_PERIODS)
         try:
-            cleanampl, _, cleanvg = xc.FTAN(whiten=False,
+            cleanampl, _, cleanvg, cleanvp = xc.FTAN(whiten=False,
                                             phase_corr=phase_corr,
                                             months=months,
                                             optimize_curve=optimize_curve,
@@ -1046,12 +1092,20 @@ class CrossCorrelation:
                                              v=np.nan * np.zeros(len(CLEANFTAN_PERIODS)),
                                              station1=self.station1,
                                              station2=self.station2)
-            return rawampl, rawvg, cleanampl, cleanvg
+            cleanvp = pstomo.DispersionCurve(periods=CLEANFTAN_PERIODS,
+                                             v=np.nan * np.zeros(len(CLEANFTAN_PERIODS)),
+                                             station1=self.station1,
+                                             station2=self.station2)
+            return rawampl, rawvg, rawvp, cleanampl, cleanvg, cleanvp
 
         # adding spectral SNRs associated with the periods of the
-        # clean vg curve
+        # clean vg and vp curves
         if add_SNRs:
             cleanvg.add_SNRs(xc, months=months,
+                             vmin=vmin, vmax=vmax,
+                             signal2noise_trail=signal2noise_trail,
+                             noise_window_size=noise_window_size)
+            cleanvp.add_SNRs(xc, months=months,
                              vmin=vmin, vmax=vmax,
                              signal2noise_trail=signal2noise_trail,
                              noise_window_size=noise_window_size)
@@ -1076,7 +1130,7 @@ class CrossCorrelation:
                 # raw-clean FTAN on trimester data, using the vg curve
                 # extracted from all data as initial guess
                 try:
-                    _, _, rawvg_trimester = xc.FTAN(
+                    _, _, rawvg_trimester, rawvp_trimester = xc.FTAN(
                         whiten=False,
                         months=months_of_xc,
                         vgarray_init=rawvg_init,
@@ -1087,7 +1141,7 @@ class CrossCorrelation:
 
                     phase_corr_trimester = xc.phase_func(vgcurve=rawvg_trimester)
 
-                    _, _, cleanvg_trimester = xc.FTAN(
+                    _, _, cleanvg_trimester, cleanvp_trimester = xc.FTAN(
                         whiten=False,
                         phase_corr=phase_corr_trimester,
                         months=months_of_xc,
@@ -1108,10 +1162,16 @@ class CrossCorrelation:
                                                signal2noise_trail=signal2noise_trail,
                                                noise_window_size=noise_window_size)
 
-                # adding trimester vg curve
-                cleanvg.add_trimester(trimester_start, cleanvg_trimester)
+                    cleanvp_trimester.add_SNRs(xc, months=months_of_xc,
+                                               vmin=vmin, vmax=vmax,
+                                               signal2noise_trail=signal2noise_trail,
+                                               noise_window_size=noise_window_size)
 
-        return rawampl, rawvg, cleanampl, cleanvg
+                # adding trimester vg and vp curves
+                cleanvg.add_trimester(trimester_start, cleanvg_trimester)
+                cleanvp.add_trimester(trimester_start, cleanvp_trimester)
+
+        return rawampl, rawvg, rawvp, cleanampl, cleanvg, cleanvp
 
     def phase_func(self, vgcurve):
         """
@@ -1142,7 +1202,7 @@ class CrossCorrelation:
         # phase function of f
         return interp1d(x=freqarray[mask], y=phi)
 
-    def plot_FTAN(self, rawampl=None, rawvg=None, cleanampl=None, cleanvg=None,
+    def plot_FTAN(self, rawampl=None, rawvg=None, rawvp=None, cleanampl=None, cleanvg=None, cleanvp=None,
                   whiten=False, months=None, showplot=True, normalize_ampl=True,
                   logscale=True, bbox=BBOX_SMALL, figsize=(16, 5), outfile=None,
                   vmin=SIGNAL_WINDOW_VMIN, vmax=SIGNAL_WINDOW_VMAX,
@@ -1216,7 +1276,7 @@ class CrossCorrelation:
         """
         # performing FTAN analysis if needed
         if any(obj is None for obj in [rawampl, rawvg, cleanampl, cleanvg]):
-            rawampl, rawvg, cleanampl, cleanvg = self.FTAN_complete(
+            rawampl, rawvg, rawvp, cleanampl, cleanvg, cleanvp = self.FTAN_complete(
                 whiten=whiten, months=months, add_SNRs=True,
                 vmin=vmin, vmax=vmax,
                 signal2noise_trail=signal2noise_trail,
@@ -2053,6 +2113,7 @@ class CrossCorrelationCollection(AttribDict):
         print(s.format(len(pairs), outputpath))
 
         cleanvgcurves = []
+        cleanvpcurves = []
         print("Appending FTAN of pair:",)
         for i, (s1, s2) in enumerate(pairs):
             # appending FTAN plot of pair s1-s2 to pdf
@@ -2062,7 +2123,7 @@ class CrossCorrelationCollection(AttribDict):
 
             try:
                 # complete FTAN analysis
-                rawampl, rawvg, cleanampl, cleanvg = xc.FTAN_complete(
+                rawampl, rawvg, rawvp, cleanampl, cleanvg, cleanvp = xc.FTAN_complete(
                     whiten=whiten, months=monthyears,
                     vmin=vmin, vmax=vmax,
                     signal2noise_trail=signal2noise_trail,
@@ -2070,7 +2131,7 @@ class CrossCorrelationCollection(AttribDict):
                     **kwargs)
 
                 # plotting raw-clean FTAN
-                fig = xc.plot_FTAN(rawampl, rawvg, cleanampl, cleanvg,
+                fig = xc.plot_FTAN(rawampl, rawvg, rawvp, cleanampl, cleanvg, cleanvp,
                                    whiten=whiten,
                                    normalize_ampl=normalize_ampl,
                                    logscale=logscale,
@@ -2084,6 +2145,7 @@ class CrossCorrelationCollection(AttribDict):
 
                 # appending clean vg curve
                 cleanvgcurves.append(cleanvg)
+                cleanvpcurves.append(cleanvp)
 
             except Exception as err:
                 # something went wrong with this FTAN
@@ -2097,6 +2159,9 @@ class CrossCorrelationCollection(AttribDict):
         # exporting vg curves to pickle file
         f = psutils.openandbackup(outputpath + '.pickle', mode='wb')
         pickle.dump(cleanvgcurves, f, protocol=2)
+        f.close()
+        f = psutils.openandbackup(outputpath + '_vpc.pickle', mode='wb')
+        pickle.dump(cleanvpcurves, f, protocol=2)
         f.close()
 
     def stations(self, pairs, sort=True):

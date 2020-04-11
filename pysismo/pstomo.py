@@ -111,7 +111,9 @@ class DispersionCurve:
                  maxsdev=MAXSDEV,
                  minnbtrimester=MINNBTRIMESTER,
                  maxperiodfactor=MAXPERIOD_FACTOR,
-                 nom2inst_periods=None):
+                 nom2inst_periods=None,
+                 vtype='group',
+                 Nval=None):
         """
         Initiliazes the dispersion curve between the pair *station1*-*station2*
         using the given velocities (array *v*) at the given *periods*.
@@ -151,6 +153,10 @@ class DispersionCurve:
 
         # list of (nominal period, instantaneous period)
         self.nom2inst_periods = nom2inst_periods
+
+        # type of velocity (group or phase), and N value (if phase)
+        self.vtype = vtype
+        self.Nval = Nval
 
     def __repr__(self):
         return 'Dispersion curve between stations {}-{}'.format(self.station1.name,
