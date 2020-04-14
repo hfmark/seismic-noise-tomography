@@ -951,10 +951,11 @@ class CrossCorrelation:
         mse = np.zeros(N_vals.shape)*np.nan
         freqdist = (1/ftan_periods)*self.dist()
         for nn in range(len(N_vals)):
-            vpcurves_N[nn] = ((freqdist**-1)*(ph_curve + np.pi/4 + 2*np.pi*N_vals[nn]) + \
+            vpcurves_N[nn] = ((freqdist**-1)*(ph_curve - np.pi/4 + 2*np.pi*N_vals[nn]) + \
                              1./vgarray)**-1
-            outside_ind = np.where(np.logical_or(vpcurves_N[nn] < min(FTAN_VELOCITIES), 
-                                   vpcurves_N[nn] > max(FTAN_VELOCITIES)))
+            with np.errstate(invalid='ignore'):  # for gt/lt with nan
+                outside_ind = np.where(np.logical_or(vpcurves_N[nn] < min(FTAN_VELOCITIES), 
+                                       vpcurves_N[nn] > max(FTAN_VELOCITIES)))
             vpcurves_N[nn][outside_ind] = np.nan
             mse[nn] = np.nanmean((vpcurves_N[nn] - vp_ideal)**2)
         Nind = np.where(mse==np.nanmin(mse))[0][0]
