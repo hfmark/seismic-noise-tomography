@@ -71,7 +71,7 @@
 # So, there is one sub-directory per month, and inside it, one miniseed
 # file per month and per station.
 
-MSEED_DIR = ../seed/1P_mn
+MSEED_DIR = ../seed/1P_mn_z
 STATIONXML_DIR = ../StationXML_files
 DATALESS_DIR = ../seed/dataless
 
