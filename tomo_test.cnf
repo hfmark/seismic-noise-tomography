@@ -147,7 +147,7 @@ USE_DATALESSPAZ = True
 USE_STATIONXML = False
 
 # first day of cross-correlation (d/m/y)
-FIRSTDAY = 04/11/2018
+FIRSTDAY = 01/05/2011
 # last day of cross-correlation (d/m/y)
 LASTDAY = 31/10/2019
 
