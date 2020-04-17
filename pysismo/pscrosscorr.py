@@ -45,7 +45,7 @@ from pysismo.psconfig import (
     RAWFTAN_PERIODS, CLEANFTAN_PERIODS, FTAN_VELOCITIES, FTAN_ALPHA, STRENGTH_SMOOTHING,
     USE_INSTANTANEOUS_FREQ, MAX_RELDIFF_INST_NOMINAL_PERIOD, MIN_INST_PERIOD,
     HALFWINDOW_MEDIAN_PERIOD, MAX_RELDIFF_INST_MEDIAN_PERIOD, BBOX_LARGE, BBOX_SMALL,
-    MODEL96_FILE)
+    MODEL96_FILE, CALCULATE_PHASE_VELOCITIES)
 
 # ========================
 # Constants and parameters
@@ -721,7 +721,7 @@ class CrossCorrelation:
     def FTAN(self, whiten=False, phase_corr=None, months=None, vgarray_init=None,
              optimize_curve=None, strength_smoothing=STRENGTH_SMOOTHING,
              use_inst_freq=USE_INSTANTANEOUS_FREQ, vg_at_nominal_freq=None,
-             debug=False,model96=MODEL96_FILE):
+             debug=False, model96=MODEL96_FILE, calc_phv=CALCULATE_PHASE_VELOCITIES):
         """
         Frequency-time analysis of a cross-correlation function.
 
@@ -930,35 +930,39 @@ class CrossCorrelation:
             # list of (nominal period, inst period)
             nom2inst_periods = zip(ftan_periods, inst_periods)
 
-        # now that we have group velocities sorted as best we can,
-        # track that in the phase array
-        ph_curve = np.zeros(vgarray.shape)*np.nan
-        for ip in range(len(ftan_periods)):
-            fph = np.interp(x=vgarray,
-                            xp=FTAN_VELOCITIES,
-                            fp=phase_resampled[ip],
-                            left=np.nan,
-                            right=np.nan)
-            ph_curve[ip] = fph[ip]
+        if calc_phv:
+            # now that we have group velocities sorted as best we can,
+            # track that in the phase array
+            ph_curve = np.zeros(vgarray.shape)*np.nan
+            for ip in range(len(ftan_periods)):
+                fph = np.interp(x=vgarray,
+                                xp=FTAN_VELOCITIES,
+                                fp=phase_resampled[ip],
+                                left=np.nan,
+                                right=np.nan)
+                ph_curve[ip] = fph[ip]
 
-        # get a dispersion curve for a 1D model for comparison
-        vp_ideal = psdepthmodel.Rayleigh_phase_velocities(ftan_periods,modelfile=model96)
+            # get a dispersion curve for a 1D model for comparison
+            vp_ideal = psdepthmodel.Rayleigh_phase_velocities(ftan_periods,modelfile=model96)
 
-        # for several N values, calculate phase velocity dispersion curve and see
-        # how close it is to the model one
-        N_vals = np.arange(-2,3)
-        vpcurves_N = np.zeros((len(N_vals),len(vgarray)))
-        mse = np.zeros(N_vals.shape)*np.nan
-        freqdist = (1/ftan_periods)*self.dist()
-        for nn in range(len(N_vals)):
-            vpcurves_N[nn] = ((freqdist**-1)*(ph_curve - np.pi/4 + 2*np.pi*N_vals[nn]) + \
-                             1./vgarray)**-1
-            with np.errstate(invalid='ignore'):  # for gt/lt with nan
-                outside_ind = np.where(np.logical_or(vpcurves_N[nn] < min(FTAN_VELOCITIES), 
-                                       vpcurves_N[nn] > max(FTAN_VELOCITIES)))
-            vpcurves_N[nn][outside_ind] = np.nan
-            mse[nn] = np.nanmean((vpcurves_N[nn] - vp_ideal)**2)
-        Nind = np.where(mse==np.nanmin(mse))[0][0]
+            # for several N values, calculate phase velocity dispersion curve and see
+            # how close it is to the model one
+            N_vals = np.arange(-2,3)
+            vpcurves_N = np.zeros((len(N_vals),len(vgarray)))
+            mse = np.zeros(N_vals.shape)*np.nan
+            freqdist = (1/ftan_periods)*self.dist()
+            for nn in range(len(N_vals)):
+                vpcurves_N[nn] = ((freqdist**-1)*(ph_curve - np.pi/4 + 2*np.pi*N_vals[nn]) + \
+                                 1./vgarray)**-1
+                with np.errstate(invalid='ignore'):  # for gt/lt with nan
+                    outside_ind = np.where(np.logical_or(vpcurves_N[nn] < min(FTAN_VELOCITIES), 
+                                           vpcurves_N[nn] > max(FTAN_VELOCITIES)))
+                vpcurves_N[nn][outside_ind] = np.nan
+                mse[nn] = np.nanmean((vpcurves_N[nn] - vp_ideal)**2)
+            Nind = np.where(mse==np.nanmin(mse))[0][0]
+            vparray = vpcurves_N[Nind]
+        else:
+            vparray = np.zeros(vgarray.shape)
 
         vgcurve = pstomo.DispersionCurve(periods=ftan_periods,
                                          v=vgarray,
@@ -967,7 +971,7 @@ class CrossCorrelation:
                                          nom2inst_periods=nom2inst_periods)
 
         vpcurve = pstomo.DispersionCurve(periods=ftan_periods,
-                                         v=vpcurves_N[Nind],
+                                         v=vparray,
                                          station1=self.station1,
                                          station2=self.station2,
                                          nom2inst_periods=nom2inst_periods,
@@ -2146,7 +2150,8 @@ class CrossCorrelationCollection(AttribDict):
 
                 # appending clean vg curve
                 cleanvgcurves.append(cleanvg)
-                cleanvpcurves.append(cleanvp)
+                if not np.all(cleanvp.v == 0):  # if we actually calculated any curve here
+                    cleanvpcurves.append(cleanvp)
 
             except Exception as err:
                 # something went wrong with this FTAN
@@ -2161,9 +2166,10 @@ class CrossCorrelationCollection(AttribDict):
         f = psutils.openandbackup(outputpath + '.pickle', mode='wb')
         pickle.dump(cleanvgcurves, f, protocol=2)
         f.close()
-        f = psutils.openandbackup(outputpath + '_vpc.pickle', mode='wb')
-        pickle.dump(cleanvpcurves, f, protocol=2)
-        f.close()
+        if len(cleanvpcurves)>0:
+            f = psutils.openandbackup(outputpath + '_vpc.pickle', mode='wb')
+            pickle.dump(cleanvpcurves, f, protocol=2)
+            f.close()
 
     def stations(self, pairs, sort=True):
         """

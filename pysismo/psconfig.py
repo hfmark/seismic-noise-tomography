@@ -180,7 +180,9 @@ FTAN_VELOCITIES_STEP = FTAN_VELOCITIES_STARTSTOPSTEP[2]
 # the dispersion curve seeks to minimize
 STRENGTH_SMOOTHING = config.getfloat('FTAN', 'STRENGTH_SMOOTHING')
 
-# path to model96 file for CPS input to get phase velocities/match N
+# flag for calculating phase velocities along with group
+CALCULATE_PHASE_VELOCITIES = config.getboolean('FTAN', 'CALCULATE_PHASE_VELOCITIES')
+# path to model96 file for CPS input to predict phase velocities/match N
 MODEL96_FILE = config.get('FTAN', 'MODEL96_FILE')
 
 # replace nominal frequancy (i.e., center frequency of Gaussian filters)
