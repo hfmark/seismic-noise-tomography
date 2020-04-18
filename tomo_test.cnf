@@ -258,7 +258,7 @@ MAX_RELDIFF_INST_MEDIAN_PERIOD = 0.5
 # Default parameters related to the velocity selection criteria
 
 # min spectral SNR to retain velocity
-MINSPECTSNR = 7
+MINSPECTSNR = 5
 # min spectral SNR to retain velocity if no std dev
 MINSPECTSNR_NOSDEV = 15
 # max sdt dev (km/s) to retain velocity
