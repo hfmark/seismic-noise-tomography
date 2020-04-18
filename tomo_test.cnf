@@ -223,7 +223,7 @@ FTAN_ALPHA = 20
 STRENGTH_SMOOTHING = 1.0
 
 # flag for calculating phase velocities along with group
-CALCULATE_PHSE_VELOCITIES = True
+CALCULATE_PHASE_VELOCITIES = True
 # path to model96 file for CPS for predicting phase velocities/matching N
 MODEL96_FILE = ./tak135sph.mod
 
