@@ -17,6 +17,7 @@ from matplotlib import gridspec
 from matplotlib.colors import ColorConverter
 import shutil
 from inspect import getargspec
+from copy import deepcopy
 
 
 # todo: discard measurments if too different from trimester velocities (see BB15B-SPB)
@@ -238,7 +239,8 @@ class DispersionCurve:
         if self.nom2inst_periods:
             # if a list of (nominal period, inst period) is provided
             # we use it to re-interpolate SNRs
-            inst_period_func = interp1d(*zip(*self.nom2inst_periods))
+            nom2inst_copy = deepcopy(self.nom2inst_periods)
+            inst_period_func = interp1d(*zip(*nom2inst_copy))
             SNRs = np.interp(x=self.periods,
                              xp=inst_period_func(self.periods),
                              fp=SNRs,
