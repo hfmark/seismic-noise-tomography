@@ -15,7 +15,7 @@ from obspy.signal.invsim import cosine_taper
 import numpy as np
 from numpy.fft import rfft, irfft, fft, ifft, fftfreq
 from scipy import integrate
-from scipy.interpolate import RectBivariateSpline, interp1d
+from scipy.interpolate import RectBivariateSpline, interp1d, interp2d
 from scipy.optimize import minimize
 import itertools as it
 import os
@@ -45,7 +45,7 @@ from pysismo.psconfig import (
     RAWFTAN_PERIODS, CLEANFTAN_PERIODS, FTAN_VELOCITIES, FTAN_ALPHA, STRENGTH_SMOOTHING,
     USE_INSTANTANEOUS_FREQ, MAX_RELDIFF_INST_NOMINAL_PERIOD, MIN_INST_PERIOD,
     HALFWINDOW_MEDIAN_PERIOD, MAX_RELDIFF_INST_MEDIAN_PERIOD, BBOX_LARGE, BBOX_SMALL,
-    MODEL96_FILE, CALCULATE_PHASE_VELOCITIES)
+    MODEL96_FILE, CALCULATE_PHASE_VELOCITIES, PI4_SIGN)
 
 # ========================
 # Constants and parameters
@@ -721,7 +721,8 @@ class CrossCorrelation:
     def FTAN(self, whiten=False, phase_corr=None, months=None, vgarray_init=None,
              optimize_curve=None, strength_smoothing=STRENGTH_SMOOTHING,
              use_inst_freq=USE_INSTANTANEOUS_FREQ, vg_at_nominal_freq=None,
-             debug=False, model96=MODEL96_FILE, calc_phv=CALCULATE_PHASE_VELOCITIES):
+             debug=False, model96=MODEL96_FILE, calc_phv=CALCULATE_PHASE_VELOCITIES,
+             pi4_sign=PI4_SIGN):
         """
         Frequency-time analysis of a cross-correlation function.
 
@@ -933,16 +934,15 @@ class CrossCorrelation:
         vparray = np.zeros(vgarray.shape)*np.nan
         kval = np.zeros(vgarray.shape)*np.nan
         if calc_phv:  # fill those arrays for vp and k
-            # now that we have group velocities sorted as best we can,
-            # track that in the phase array
+            # track vg in the phase array
             pha = np.zeros(vgarray.shape)*np.nan
+            ph_0 = phase_resampled.copy()
+            ph_0[np.isnan(phase_resampled)] = 0  # for interpolation purposes
+            fph = interp2d(FTAN_VELOCITIES,ftan_periods,ph_0,bounds_error=True)  # linear, whatev
             for ip in range(len(ftan_periods)):
-                fph = np.interp(x=vgarray,
-                                xp=FTAN_VELOCITIES,
-                                fp=phase_resampled[ip],
-                                left=np.nan,
-                                right=np.nan)  # TODO: there has to be a better way to interpolate
-                pha[ip] = fph[ip]
+                pha[ip] = fph(vgarray[ip],ftan_periods[ip])
+            # NOTE that this may not preserve nans in phase array; only gets them from vgarray
+            # but that shouldn't matter because they *are* kept in vgarray
 
             # predicted dispersion curve for a 1D model for comparison
             prvel = psdepthmodel.Rayleigh_phase_velocities(ftan_periods,modelfile=model96)
@@ -951,21 +951,22 @@ class CrossCorrelation:
             Su = 1./vgarray  # group slowness
             tu = self.dist()*Su  # group time
 
-            ifirst = min(np.where(np.isfinite(tu))[0])
+            ifirst = min(np.where(np.isfinite(tu))[0])  # indices where vg is not nan
             ilast = max(np.where(np.isfinite(tu))[0])
 
             # start with the longest period
             phpred = om[ilast]*(tu[ilast]-self.dist()/prvel[ilast])
             k = np.rint((phpred - pha[ilast])/2./np.pi)
-            vparray[ilast] = self.dist()/(tu[ilast] - (pha[ilast] + 2.0*k*np.pi - np.pi/4)/om[ilast])
+            vparray[ilast] = self.dist()/(tu[ilast] - (pha[ilast] + 2.0*k*np.pi + \
+                             pi4_sign*np.pi/4)/om[ilast])
             kval[ilast] = k
 # NOTE: -pi/4 for vertical component; should add a switch for sign somewhere
             for ip in range(ilast-1,ifirst-1,-1):  #ifirst-1 to get all the way to ifirst
                 Vpred = 1/(((Su[ip]+Su[ip+1])*(om[ip]-om[ip+1])/2. + om[ip+1]/vparray[ip+1])/om[ip])
-# NOTE: this assumes that vgarray doesn't have nan gaps (check this?)
                 phpred = om[ip]*(tu[ip] - self.dist()/Vpred)
                 k = np.rint((phpred - pha[ip])/2.0/np.pi)
-                vparray[ip] = self.dist()/(tu[ip] - (pha[ip] + 2.*k*np.pi - np.pi/4)/om[ip])
+                vparray[ip] = self.dist()/(tu[ip] - (pha[ip] + 2.*k*np.pi + \
+                              pi4_sign*np.pi/4)/om[ip])
                 kval[ip] = k
 # TODO: deal with jumps in vparray/smooth things?
 
@@ -980,7 +981,7 @@ class CrossCorrelation:
                                          station1=self.station1,
                                          station2=self.station2,
                                          nom2inst_periods=nom2inst_periods,
-                                         vtype='phase')
+                                         vtype='phase',
                                          Nval=kval)
 
         return ampl_resampled, phase_resampled, vgcurve, vpcurve
