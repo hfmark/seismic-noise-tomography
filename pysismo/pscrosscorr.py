@@ -933,6 +933,7 @@ class CrossCorrelation:
 
         vparray = np.zeros(vgarray.shape)*np.nan
         kval = np.zeros(vgarray.shape)*np.nan
+
         if calc_phv:  # fill those arrays for vp and k
             # track vg in the phase array
             pha = np.zeros(vgarray.shape)*np.nan
@@ -941,7 +942,7 @@ class CrossCorrelation:
             fph = interp2d(FTAN_VELOCITIES,ftan_periods,ph_0,bounds_error=True)  # linear, whatev
             for ip in range(len(ftan_periods)):
                 pha[ip] = fph(vgarray[ip],ftan_periods[ip])
-            # NOTE that this may not preserve nans in phase array; only gets them from vgarray
+            # NOTE that this isn't guaranteed to preserve nans in phase array; it gets them from vgarray
             # but that shouldn't matter because they *are* kept in vgarray
 
             # predicted dispersion curve for a 1D model for comparison
@@ -960,7 +961,8 @@ class CrossCorrelation:
             vparray[ilast] = self.dist()/(tu[ilast] - (pha[ilast] + 2.0*k*np.pi + \
                              pi4_sign*np.pi/4)/om[ilast])
             kval[ilast] = k
-# NOTE: -pi/4 for vertical component; should add a switch for sign somewhere
+
+            # work backwards from ilast
             for ip in range(ilast-1,ifirst-1,-1):  #ifirst-1 to get all the way to ifirst
                 Vpred = 1/(((Su[ip]+Su[ip+1])*(om[ip]-om[ip+1])/2. + om[ip+1]/vparray[ip+1])/om[ip])
                 phpred = om[ip]*(tu[ip] - self.dist()/Vpred)
@@ -968,7 +970,6 @@ class CrossCorrelation:
                 vparray[ip] = self.dist()/(tu[ip] - (pha[ip] + 2.*k*np.pi + \
                               pi4_sign*np.pi/4)/om[ip])
                 kval[ip] = k
-# TODO: deal with jumps in vparray/smooth things?
 
         vgcurve = pstomo.DispersionCurve(periods=ftan_periods,
                                          v=vgarray,
