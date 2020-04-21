@@ -930,39 +930,44 @@ class CrossCorrelation:
             # list of (nominal period, inst period)
             nom2inst_periods = zip(ftan_periods, inst_periods)
 
-        if calc_phv:
+        vparray = np.zeros(vgarray.shape)*np.nan
+        kval = np.zeros(vgarray.shape)*np.nan
+        if calc_phv:  # fill those arrays for vp and k
             # now that we have group velocities sorted as best we can,
             # track that in the phase array
-            ph_curve = np.zeros(vgarray.shape)*np.nan
+            pha = np.zeros(vgarray.shape)*np.nan
             for ip in range(len(ftan_periods)):
                 fph = np.interp(x=vgarray,
                                 xp=FTAN_VELOCITIES,
                                 fp=phase_resampled[ip],
                                 left=np.nan,
-                                right=np.nan)
-                ph_curve[ip] = fph[ip]
+                                right=np.nan)  # TODO: there has to be a better way to interpolate
+                pha[ip] = fph[ip]
 
-            # get a dispersion curve for a 1D model for comparison
-            vp_ideal = psdepthmodel.Rayleigh_phase_velocities(ftan_periods,modelfile=model96)
+            # predicted dispersion curve for a 1D model for comparison
+            prvel = psdepthmodel.Rayleigh_phase_velocities(ftan_periods,modelfile=model96)
 
-            # for several N values, calculate phase velocity dispersion curve and see
-            # how close it is to the model one
-            N_vals = np.arange(-2,3)
-            vpcurves_N = np.zeros((len(N_vals),len(vgarray)))
-            mse = np.zeros(N_vals.shape)*np.nan
-            freqdist = (1/ftan_periods)*self.dist()
-            for nn in range(len(N_vals)):
-                vpcurves_N[nn] = ((freqdist**-1)*(ph_curve - np.pi/4 + 2*np.pi*N_vals[nn]) + \
-                                 1./vgarray)**-1
-                with np.errstate(invalid='ignore'):  # for gt/lt with nan
-                    outside_ind = np.where(np.logical_or(vpcurves_N[nn] < min(FTAN_VELOCITIES), 
-                                           vpcurves_N[nn] > max(FTAN_VELOCITIES)))
-                vpcurves_N[nn][outside_ind] = np.nan
-                mse[nn] = np.nanmean((vpcurves_N[nn] - vp_ideal)**2)
-            Nind = np.where(mse==np.nanmin(mse))[0][0]
-            vparray = vpcurves_N[Nind]
-        else:
-            vparray = np.zeros(vgarray.shape)
+            om = 2*np.pi/ftan_periods
+            Su = 1./vgarray  # group slowness
+            tu = self.dist()*Su  # group time
+
+            ifirst = min(np.where(np.isfinite(tu))[0])
+            ilast = max(np.where(np.isfinite(tu))[0])
+
+            # start with the longest period
+            phpred = om[ilast]*(tu[ilast]-self.dist()/prvel[ilast])
+            k = np.rint((phpred - pha[ilast])/2./np.pi)
+            vparray[ilast] = self.dist()/(tu[ilast] - (pha[ilast] + 2.0*k*np.pi - np.pi/4)/om[ilast])
+            kval[ilast] = k
+# NOTE: -pi/4 for vertical component; should add a switch for sign somewhere
+            for ip in range(ilast-1,ifirst-1,-1):  #ifirst-1 to get all the way to ifirst
+                Vpred = 1/(((Su[ip]+Su[ip+1])*(om[ip]-om[ip+1])/2. + om[ip+1]/vparray[ip+1])/om[ip])
+# NOTE: this assumes that vgarray doesn't have nan gaps (check this?)
+                phpred = om[ip]*(tu[ip] - self.dist()/Vpred)
+                k = np.rint((phpred - pha[ip])/2.0/np.pi)
+                vparray[ip] = self.dist()/(tu[ip] - (pha[ip] + 2.*k*np.pi - np.pi/4)/om[ip])
+                kval[ip] = k
+# TODO: deal with jumps in vparray/smooth things?
 
         vgcurve = pstomo.DispersionCurve(periods=ftan_periods,
                                          v=vgarray,
@@ -975,8 +980,8 @@ class CrossCorrelation:
                                          station1=self.station1,
                                          station2=self.station2,
                                          nom2inst_periods=nom2inst_periods,
-                                         vtype='phase',
-                                         Nval=N_vals[Nind])
+                                         vtype='phase')
+                                         Nval=kval)
 
         return ampl_resampled, phase_resampled, vgcurve, vpcurve
 
