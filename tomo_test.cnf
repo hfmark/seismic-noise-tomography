@@ -224,6 +224,8 @@ STRENGTH_SMOOTHING = 1.0
 
 # flag for calculating phase velocities along with group
 CALCULATE_PHASE_VELOCITIES = True
+# sign on pi/4 factor for phase shift (-1 for vertical)
+PI4_SIGN = -1.
 # path to model96 file for CPS for predicting phase velocities/matching N
 MODEL96_FILE = ./tak135sph.mod
 
@@ -265,7 +267,7 @@ MINSPECTSNR_NOSDEV = 15
 MAXSDEV = 0.1
 # min nb of trimesters to estimate std dev  (original was 4)
 MINNBTRIMESTER = 3
-# max period = *MAXPERIOD_FACTOR* * pair distance
+# max period = *MAXPERIOD_FACTOR* * pair distance  (original: 1/12)
 MAXPERIOD_FACTOR = 0.08333
 
 # Default internode spacing of grid
