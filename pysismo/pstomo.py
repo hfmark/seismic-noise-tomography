@@ -29,7 +29,8 @@ from pysismo.psconfig import (
     SIGNAL_WINDOW_VMIN, SIGNAL_WINDOW_VMAX, SIGNAL2NOISE_TRAIL, NOISE_WINDOW_SIZE,
     MINSPECTSNR, MINSPECTSNR_NOSDEV, MAXSDEV, MINNBTRIMESTER, MAXPERIOD_FACTOR,
     LONSTEP, LATSTEP, CORRELATION_LENGTH, ALPHA, BETA, LAMBDA,
-    FTAN_ALPHA, FTAN_VELOCITIES_STEP, PERIOD_RESAMPLE)
+    FTAN_ALPHA, FTAN_VELOCITIES_STEP, PERIOD_RESAMPLE,
+    USE_WAVELENGTH_CUTOFF, MINWAVELENGTH_FACTOR)
 
 # ========================
 # Constants and parameters
@@ -112,6 +113,8 @@ class DispersionCurve:
                  maxsdev=MAXSDEV,
                  minnbtrimester=MINNBTRIMESTER,
                  maxperiodfactor=MAXPERIOD_FACTOR,
+                 usewavelengthcutoff=USE_WAVELENGTH_CUTOFF,
+                 minwavelengthfactor=MINWAVELENGTH_FACTOR,
                  nom2inst_periods=None,
                  vtype='group',
                  Nval=None):
@@ -151,6 +154,8 @@ class DispersionCurve:
         self.maxsdev = maxsdev
         self.minnbtrimester = minnbtrimester
         self.maxperiodfactor = maxperiodfactor
+        self.usewavelengthcutoff = usewavelengthcutoff
+        self.minwavelengthfactor = minwavelengthfactor
 
         # list of (nominal period, instantaneous period)
         self.nom2inst_periods = nom2inst_periods
@@ -174,7 +179,8 @@ class DispersionCurve:
         return iperiod
 
     def update_parameters(self, minspectSNR=None, minspectSNR_nosdev=None,
-                          maxsdev=None, minnbtrimester=None, maxperiodfactor=None):
+                          maxsdev=None, minnbtrimester=None, maxperiodfactor=None,
+                          usewavelengthcutoff=None, minwavelengthfactor=None):
         """
         Updating one or more filtering parameter(s)
         """
@@ -188,6 +194,10 @@ class DispersionCurve:
             self.minnbtrimester = minnbtrimester
         if not maxperiodfactor is None:
             self.maxperiodfactor = maxperiodfactor
+        if not usewavelengthcutoff is None:
+            self.usewavelengthcutoff = usewavelengthcutoff
+        if not minwavelengthfactor is None:
+            self.minwavelengthfactor = minwavelengthfactor
 
     def dist(self):
         """
@@ -291,6 +301,8 @@ class DispersionCurve:
 
         Selection criteria:
         1) period <= distance * *maxperiodfactor*
+          OR
+        1) period <= distance / (*minwavelengthfactor* * v)
         2) for velocities having a standard deviation associated:
            - standard deviation <= *maxsdev*
            - SNR >= *minspectSNR*
@@ -308,10 +320,15 @@ class DispersionCurve:
         has_sdev = ~np.isnan(sdevs)  # where are std devs defined?
 
         # Selection criteria:
-        # 1) period <= distance * *maxperiodfactor*
+        if not self.usewavelengthcutoff:  # period cutoff, velocity-independent
+            # 1) period <= distance * *maxperiodfactor*
 
-        cutoffperiod = self.maxperiodfactor * self.dist()
-        mask = self.periods <= cutoffperiod
+            cutoffperiod = self.maxperiodfactor * self.dist()
+            mask = self.periods <= cutoffperiod
+        else:  # wavelength cutoff, velocity-dependent
+            # 1) period <= distance / (minwavelengthfactor * v)
+            goodperiods = self.dist() / (self.minwavelengthfactor * self.v)
+            mask = self.periods <= goodperiods
 
         # 2) for velocities having a standard deviation associated:
         #    - standard deviation <= *maxsdev*
@@ -350,17 +367,22 @@ class DispersionCurve:
         Selection criteria:
         - SNR of trimester velocity defined and >= minspectSNR
         - period <= pair distance * *maxperiodfactor*
+           OR
+        - period <= pair distance / (*minwavelengthfactor* * v)
 
         @rtype: list of L{numpy.ndarray}
         """
         # filtering criterion: periods <= distance * maxperiodfactor
         dist = self.station1.dist(self.station2)
-        periodmask = self.periods <= self.maxperiodfactor * dist
+        if not self.usewavelengthcutoff:
+            periodmask = self.periods <= self.maxperiodfactor * dist
         varrays = []
         for trimester_start, vels in self.v_trimesters.items():
             SNRs = self._SNRs_trimesters.get(trimester_start)
             if SNRs is None:
                 raise Exception("Spectral SNRs not defined")
+            if self.usewavelengthcutoffs:
+                periodmask = self.periods <= dist / (self.minwavelengthfactor * np.array(vels))
             # filtering criterion: SNR >= minspectSNR
             mask = periodmask & (np.nan_to_num(SNRs) >= self.minspectSNR)
             varrays.append(np.where(mask, vels, np.nan))

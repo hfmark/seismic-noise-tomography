@@ -229,6 +229,10 @@ MINNBTRIMESTER = config.getint('tomography', 'MINNBTRIMESTER')
 # max period = *MAXPERIOD_FACTOR* * pair distance
 MAXPERIOD_FACTOR = config.getfloat('tomography', 'MAXPERIOD_FACTOR')
 
+# instead of max period, choose minimum multiple of wavelengths (depends on velocity as well as period)
+USE_WAVELENGTH_CUTOFF = config.getboolean('tomography', 'USE_WAVELENGTH_CUTOFF')
+MINWAVELENGTH_FACTOR = config.getfloat('tomography', 'MINWAVELENGTH_FACTOR')
+
 # Default internode spacing of grid
 LONSTEP = config.getfloat('tomography', 'LONSTEP')
 LATSTEP = config.getfloat('tomography', 'LATSTEP')

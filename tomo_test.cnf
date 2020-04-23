@@ -270,6 +270,10 @@ MINNBTRIMESTER = 3
 # max period = *MAXPERIOD_FACTOR* * pair distance  (original: 1/12)
 MAXPERIOD_FACTOR = 0.08333
 
+# instead of max period, choose minimum multiple of wavelengths (depends on velocity as well as period)
+USE_WAVELENGTH_CUTOFF = True
+MINWAVELENGTH_FACTOR = 3
+
 # Default internode spacing of grid
 
 LONSTEP = 1
