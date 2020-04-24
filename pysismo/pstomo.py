@@ -381,7 +381,7 @@ class DispersionCurve:
             SNRs = self._SNRs_trimesters.get(trimester_start)
             if SNRs is None:
                 raise Exception("Spectral SNRs not defined")
-            if self.usewavelengthcutoffs:
+            if self.usewavelengthcutoff:
                 periodmask = self.periods <= dist / (self.minwavelengthfactor * np.array(vels))
             # filtering criterion: SNR >= minspectSNR
             mask = periodmask & (np.nan_to_num(SNRs) >= self.minspectSNR)
