@@ -34,7 +34,7 @@ def select_and_parse_config_file(basedir='.', ext='cnf', verbose=True):
         print("Select a configuration file:")
         for i, f in enumerate(config_files, start=1):
             print("{} - {}".format(i, f))
-        res = int(raw_input(''))
+        res = int(input(''))
         config_file = config_files[res - 1]
 
     if verbose:
