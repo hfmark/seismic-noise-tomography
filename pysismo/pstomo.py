@@ -328,7 +328,8 @@ class DispersionCurve:
         else:  # wavelength cutoff, velocity-dependent
             # 1) period <= distance / (minwavelengthfactor * v)
             goodperiods = self.dist() / (self.minwavelengthfactor * self.v)
-            mask = self.periods <= goodperiods
+            with np.errstate(invalid='ignore'):
+                mask = self.periods <= goodperiods
 
         # 2) for velocities having a standard deviation associated:
         #    - standard deviation <= *maxsdev*
@@ -382,7 +383,8 @@ class DispersionCurve:
             if SNRs is None:
                 raise Exception("Spectral SNRs not defined")
             if self.usewavelengthcutoff:
-                periodmask = self.periods <= dist / (self.minwavelengthfactor * np.array(vels))
+                with np.errstate(invalid='ignore'):
+                    periodmask = self.periods <= dist / (self.minwavelengthfactor * np.array(vels))
             # filtering criterion: SNR >= minspectSNR
             mask = periodmask & (np.nan_to_num(SNRs) >= self.minspectSNR)
             varrays.append(np.where(mask, vels, np.nan))
