@@ -216,7 +216,7 @@ FTAN_VELOCITIES_STARTSTOPSTEP = [1.7, 5.21, 0.01]
 #
 # where f is the frequency and f0 the center frequency of the filter.
 
-FTAN_ALPHA = 20
+FTAN_ALPHA = 12
 
 # relative strength of the smoothing term in the penalty function that
 # the dispersion curve seeks to minimize
