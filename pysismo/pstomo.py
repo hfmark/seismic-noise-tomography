@@ -1115,6 +1115,22 @@ class VelocityMap:
         else:
             return (vobs - vpred) / vobs
 
+    def model_norm(self):
+        """
+        Returns the norm of the model, ie the sum of velocities
+        with v0 subtracted
+
+          norm = abs(predicted velocity - v0).sum()
+
+        @rtype: float
+        """
+        dists = np.array([c.dist() for c in self.disp_curves])
+        ttref = np.array([c.dist() / self.v0 for c in self.disp_curves])
+        ttpred = np.array(self.G * self.mopt).flatten() + ttref  # predicted tt
+        vpred = dists / ttpred  # predicted velocities
+        norm = abs(vpred - self.v0).sum()
+        return norm
+
     def checkerboard_func(self, vmid, vmin, vmax, squaresize, shape='cos'):
         """
         Returns a checkerboard function, f(lons, lats), whose background
