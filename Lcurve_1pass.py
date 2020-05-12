@@ -3,7 +3,7 @@ import os, sys
 import shutil
 import glob
 import pickle
-import itertolls as it
+import itertools as it
 
 # inversion parameters to vary
 PERIODS = [6.0, 10.0, 15.0, 20.0]
