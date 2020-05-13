@@ -4,6 +4,7 @@ import shutil
 import glob
 import pickle
 import itertools as it
+import numpy as np
 
 # inversion parameters to vary
 PERIODS = [10.0, 20.0]
