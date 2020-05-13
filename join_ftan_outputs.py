@@ -27,7 +27,14 @@ for pickle_file in flist:
     curves = pickle.load(f)
     f.close()
 
-    everything.extend(curves)
+    for c in curves:
+        try:
+            v,s = c.filtered_vels_sdevs()
+            snr = c._SNRs
+            everything.append(c)
+        except Exception:  # curves without spectral SNR get excluded
+            print(c)
+
 
 ofile = os.path.join(FTAN_DIR, 'FTAN_2004-2019_%s.pickle' % setname)
 f = open(ofile,'wb')
