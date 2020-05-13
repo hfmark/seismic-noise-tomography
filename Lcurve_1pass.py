@@ -6,13 +6,13 @@ import pickle
 import itertools as it
 
 # inversion parameters to vary
-PERIODS = [6.0, 10.0, 15.0, 20.0]
+PERIODS = [10.0, 20.0]
 GRID_STEPS = [0.3]
 MINPECTSNRS = [7.0]
-CORR_LENGTHS = [10, 30, 50, 100, 150]
-ALPHAS = [50, 100, 200, 400, 800]
-BETAS = [10, 20, 40, 80, 200]
-LAMBDAS = [0.15, 0.3]
+CORR_LENGTHS = [50]
+ALPHAS = np.arange(100,400,50)
+BETAS = np.arange(10,200,30)
+LAMBDAS = [0.2]
 
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
 
@@ -27,7 +27,7 @@ try:
 except ValueError:
     print('only one pickle file, please')
     sys.exit()
-pickle_file = flist[res]
+pickle_file = flist[res-1]
 
 print("\nProcessing dispersion curves of file: " + pickle_file)
 
