@@ -87,7 +87,7 @@ GRID_STEPS = (0.3, 0.3)
 MINPECTSNRS = (7.0, 7.0)
 CORR_LENGTHS = (50, 50)
 ALPHAS = (400, 100)
-BETAS = (100, 100)
+BETAS = (50, 50)
 LAMBDAS = (0.3, 0.3)
 
 # stations to skip (if any)
