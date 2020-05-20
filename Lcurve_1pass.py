@@ -7,12 +7,13 @@ import itertools as it
 import numpy as np
 
 # inversion parameters to vary
-PERIODS = [10.0, 20.0]
+PERIODS = [10.0]
 GRID_STEPS = [0.3]
 MINPECTSNRS = [7.0]
 CORR_LENGTHS = [50]
-ALPHAS = np.arange(100,400,50)
-BETAS = np.arange(10,200,30)
+ALPHAS = np.append(np.arange(50,500,50),np.arange(500,2500,100))
+#BETAS = np.arange(10,200,30)
+BETAS = [10,50]
 LAMBDAS = [0.2]
 
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
