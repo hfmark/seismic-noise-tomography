@@ -163,10 +163,6 @@ class DispersionCurve:
         # list of (nominal period, instantaneous period)
         self.nom2inst_periods = nom2inst_periods
 
-        # type of velocity (group or phase), and N value (if phase)
-#        self.vtype = vtype
-#        self.Nval = Nval
-
     def __repr__(self):
         return 'Dispersion curve between stations {}-{}'.format(self.station1.name,
                                                                 self.station2.name)
