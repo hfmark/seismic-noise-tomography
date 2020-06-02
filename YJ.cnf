@@ -222,8 +222,6 @@ FTAN_ALPHA = 12
 # the dispersion curve seeks to minimize
 STRENGTH_SMOOTHING = 1.0
 
-# flag for calculating phase velocities along with group
-CALCULATE_PHASE_VELOCITIES = True
 # sign on pi/4 factor for phase shift (-1 for vertical)
 PI4_SIGN = -1.
 # path to model96 file for CPS for predicting phase velocities/matching N
@@ -272,7 +270,7 @@ MAXPERIOD_FACTOR = 0.08333
 
 # instead of max period, choose minimum multiple of wavelengths (depends on velocity as well as period)
 USE_WAVELENGTH_CUTOFF = True
-MINWAVELENGTH_FACTOR = 3
+MINWAVELENGTH_FACTOR = 2.5
 
 # Default internode spacing of grid
 
