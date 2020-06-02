@@ -3,7 +3,7 @@ Definition of classes handling dispersion curves and
 velocity maps (obtained by inverting dispersion curves)
 """
 
-from pysismo import pserrors, psutils
+from pysismo import pserrors, psutils, psdepthmodel
 import itertools as it
 import numpy as np
 from scipy.optimize import curve_fit
@@ -30,7 +30,8 @@ from pysismo.psconfig import (
     MINSPECTSNR, MINSPECTSNR_NOSDEV, MAXSDEV, MINNBTRIMESTER, MAXPERIOD_FACTOR,
     LONSTEP, LATSTEP, CORRELATION_LENGTH, ALPHA, BETA, LAMBDA,
     FTAN_ALPHA, FTAN_VELOCITIES_STEP, PERIOD_RESAMPLE,
-    USE_WAVELENGTH_CUTOFF, MINWAVELENGTH_FACTOR)
+    USE_WAVELENGTH_CUTOFF, MINWAVELENGTH_FACTOR,
+    MODEL96_FILE, PI4_SIGN)
 
 # ========================
 # Constants and parameters
@@ -107,7 +108,7 @@ class DispersionCurve:
     Class holding a dispersion curve, i.e., velocity
     as a function of period
     """
-    def __init__(self, periods, v, station1, station2,
+    def __init__(self, periods, v, station1, station2, phase,
                  minspectSNR=MINSPECTSNR,
                  minspectSNR_nosdev=MINSPECTSNR_NOSDEV,
                  maxsdev=MAXSDEV,
@@ -115,9 +116,9 @@ class DispersionCurve:
                  maxperiodfactor=MAXPERIOD_FACTOR,
                  usewavelengthcutoff=USE_WAVELENGTH_CUTOFF,
                  minwavelengthfactor=MINWAVELENGTH_FACTOR,
-                 nom2inst_periods=None,
-                 vtype='group',
-                 Nval=None):
+                 nom2inst_periods=None):
+#                 vtype='group',
+#                 Nval=None):
         """
         Initiliazes the dispersion curve between the pair *station1*-*station2*
         using the given velocities (array *v*) at the given *periods*.
@@ -138,6 +139,8 @@ class DispersionCurve:
         # periods and associated velocities
         self.periods = np.array(periods)
         self.v = np.array(v)
+        # phase values along group velocity curve, to get phase vels later
+        self.phase = np.array(phase)
         # SNRs along periods
         self._SNRs = None
         # trimester velocities and SNRs
@@ -161,8 +164,8 @@ class DispersionCurve:
         self.nom2inst_periods = nom2inst_periods
 
         # type of velocity (group or phase), and N value (if phase)
-        self.vtype = vtype
-        self.Nval = Nval
+#        self.vtype = vtype
+#        self.Nval = Nval
 
     def __repr__(self):
         return 'Dispersion curve between stations {}-{}'.format(self.station1.name,
@@ -390,6 +393,54 @@ class DispersionCurve:
             varrays.append(np.where(mask, vels, np.nan))
 
         return varrays
+
+    def calculate_phase_velocities(self, model96=MODEL96_FILE, pi4_sign=PI4_SIGN):
+        """
+        Calculate phase velocities from group velocity curve, using predicted curve
+        to get a starting point and working down to shorter periods.
+        Group velocities are checked for quality first, so longest period for phase
+        velocities matches longest usable period for group velocities and we don't 
+        calculate stuff based on iffy group velocities.
+        """
+
+        vgroup, _ = self.filtered_vels_sdevs()
+        vphase = np.zeros(vgroup.shape)*np.nan
+        kval = np.zeros(vgroup.shape)*np.nan
+
+        prvel = psdepthmodel.Rayleigh_phase_velocities(self.periods,modelfile=model96)
+
+        om = 2*np.pi/self.periods
+        Su = 1./vgroup
+        tu = self.dist()*Su
+
+        try:
+            ifirst = min(np.where(np.isfinite(tu))[0])  # indices where vg is not nan
+            ilast = max(np.where(np.isfinite(tu))[0])
+        except ValueError:
+            self.vphase = vphase
+            self.Kval = kval
+            return vphase, kval
+
+        phpred = om[ilast]*(tu[ilast] - (self.dist()/prvel[ilast]))
+        k = np.rint((phpred - self.phase[ilast])/2./np.pi)
+        vphase[ilast] = self.dist()/(tu[ilast] - (self.phase[ilast] + 2.*k*np.pi + \
+                        pi4_sign*np.pi/4)/om[ilast])
+        kval[ilast] = k
+
+        # work backwards from here:
+        for ip in range(ilast-1,ifirst-1,-1):
+            Vpred = 1/(((Su[ip]+Su[ip+1])*(om[ip]-om[ip+1])/2. + om[ip+1]/vphase[ip+1])/om[ip])
+            phpred = om[ip]*(tu[ip] - (self.dist()/Vpred))
+            k = np.rint((phpred - self.phase[ip])/2./np.pi)
+            vphase[ip] = self.dist()/(tu[ip] - (self.phase[ip] + 2.*k*np.pi + \
+                         pi4_sign*np.pi/4)/om[ip])
+            kval[ip] = k
+
+        # save to self
+        self.vphase = vphase
+        self.Kval = kval
+
+        return vphase, kval  # do I actually want this?
 
 
 class Grid:
