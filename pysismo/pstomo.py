@@ -117,8 +117,6 @@ class DispersionCurve:
                  usewavelengthcutoff=USE_WAVELENGTH_CUTOFF,
                  minwavelengthfactor=MINWAVELENGTH_FACTOR,
                  nom2inst_periods=None):
-#                 vtype='group',
-#                 Nval=None):
         """
         Initiliazes the dispersion curve between the pair *station1*-*station2*
         using the given velocities (array *v*) at the given *periods*.
