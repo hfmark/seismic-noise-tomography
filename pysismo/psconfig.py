@@ -180,8 +180,7 @@ FTAN_VELOCITIES_STEP = FTAN_VELOCITIES_STARTSTOPSTEP[2]
 # the dispersion curve seeks to minimize
 STRENGTH_SMOOTHING = config.getfloat('FTAN', 'STRENGTH_SMOOTHING')
 
-# flag for calculating phase velocities along with group
-CALCULATE_PHASE_VELOCITIES = config.getboolean('FTAN', 'CALCULATE_PHASE_VELOCITIES')
+# for phase velocities:
 # sign on pi/4 factor for phase shift (-1 for vertical)
 PI4_SIGN = config.getfloat('FTAN','PI4_SIGN')
 # path to model96 file for CPS input to predict phase velocities/match N
