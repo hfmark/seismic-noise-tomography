@@ -420,7 +420,7 @@ class DispersionCurve:
             ilast = max(np.where(np.isfinite(vgroup))[0]) + jlast
         except ValueError:
             self.vphase = vphase
-            sefl.kval = kval
+            self.kval = kval
             return
 
         if np.any(np.isnan(vgroup[ifirst:ilast+1])):  # fill any nan holes in vgroup
@@ -465,7 +465,7 @@ class DispersionCurve:
 
         # save to self
         self.vphase = vphase
-        sefl.kval = kval
+        self.kval = kval
         return
 
     def adjust_kval(self):
