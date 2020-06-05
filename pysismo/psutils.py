@@ -138,7 +138,8 @@ def plot_nb_pairs():
     """
     # parsing some parameters of configuration file
     from pysismo.psconfig import (FTAN_DIR, MINSPECTSNR, MINSPECTSNR_NOSDEV,
-                                  MINNBTRIMESTER, MAXSDEV)
+                                  MINNBTRIMESTER, MAXSDEV, MAXPERIOD_FACTOR,
+                                  USE_WAVELENGTH_CUTOFF, MINWAVELENGTH_FACTOR)
 
     # selecting dispersion curves
     flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*.pickle*')))
@@ -161,10 +162,13 @@ def plot_nb_pairs():
             c.update_parameters(minspectSNR=MINSPECTSNR,
                                 minspectSNR_nosdev=MINSPECTSNR_NOSDEV,
                                 minnbtrimester=MINNBTRIMESTER,
-                                maxsdev=MAXSDEV)
+                                maxsdev=MAXSDEV,
+                                maxperiodfactor=MAXPERIOD_FACTOR,
+                                usewavelengthcutoff=USE_WAVELENGTH_CUTOFF,
+                                minwavelengthfactor=MINWAVELENGTH_FACTOR)
 
         # list of arrays of filtered velocities
-        list_filtered_vels = [c.filtered_vels_sdevs()[0] for c in curves]
+        list_filtered_vels = [c.filtered_vels_sdevs(vtype='group')[0] for c in curves]
 
         n_init = []
         n_final = []
