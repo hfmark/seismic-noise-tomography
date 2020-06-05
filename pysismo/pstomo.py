@@ -289,7 +289,7 @@ class DispersionCurve:
 
         return np.array(sdevs) if sdevs else np.ones_like(self.periods) * np.nan
 
-    def filtered_vels_sdevs(self):
+    def filtered_vels_sdevs(self,vtype='group'):
         """
         Returns array of velocities and array of associated
         standard deviations. Velocities not passing selection
@@ -342,9 +342,12 @@ class DispersionCurve:
             np.nan_to_num(self._SNRs[~has_sdev]) >= self.minspectSNR_nosdev
 
         # replacing velocities not passing the selection criteria with NaNs
-        return np.where(mask, self.v, np.nan), sdevs
+        if vtype == 'group':
+            return np.where(mask, self.v, np.nan), sdevs
+        elif vtype == 'phase':
+            return np.where(mask, self.vphase, np.nan), sdevs  # nans will already be nans tbh
 
-    def filtered_vel_sdev_SNR(self, period):
+    def filtered_vel_sdev_SNR(self, period, vtype='group'):
         """
         Returns a velocity, its std deviation and SNR at a given period,
         or nan if the velocity does not satisfy the criteria, or
@@ -355,7 +358,7 @@ class DispersionCurve:
         """
         iperiod = self.get_period_index(period)
 
-        vels, sdevs = self.filtered_vels_sdevs()
+        vels, sdevs = self.filtered_vels_sdevs(vtype=vtype)
         return vels[iperiod], sdevs[iperiod], self._SNRs[iperiod]
 
     def filtered_trimester_vels(self):
@@ -388,7 +391,8 @@ class DispersionCurve:
 
         return varrays
 
-    def calculate_phase_velocities(self, model96=MODEL96_FILE, pi4_sign=PI4_SIGN):
+    def calculate_phase_velocities(self, skip=1, kval=None, jlast=0,\
+                                   model96=MODEL96_FILE, pi4_sign=PI4_SIGN):
         """
         Calculate phase velocities from group velocity curve, using predicted curve
         to get a starting point and working down to shorter periods.
@@ -397,9 +401,34 @@ class DispersionCurve:
         calculate stuff based on iffy group velocities.
         """
 
-        vgroup, _ = self.filtered_vels_sdevs()
-        vphase = np.zeros(vgroup.shape)*np.nan
-        kval = np.zeros(vgroup.shape)*np.nan
+        vphase = np.zeros(self.v.shape)*np.nan
+        if kval is None:
+            kval = np.zeros(self.v.shape)*np.nan
+            calc_kval = True
+        else:
+            calc_kval = False
+
+        try:
+            vgroup, _ = self.filtered_vels_sdevs(vtype='group')
+        except:
+            self.vphase = vphase
+            self.kval = kval
+            return
+
+        try:
+            ifirst = min(np.where(np.isfinite(vgroup))[0])  # indices where vg is not nan
+            ilast = max(np.where(np.isfinite(vgroup))[0]) + jlast
+        except ValueError:
+            self.vphase = vphase
+            sefl.kval = kval
+            return
+
+        if np.any(np.isnan(vgroup[ifirst:ilast+1])):  # fill any nan holes in vgroup
+            ok = ~np.isnan(vgroup[ifirst:ilast+1])
+            xp = ok.ravel().nonzero()[0]
+            fp = vgroup[ifirst:ilast+1][ok]
+            x = np.isnan(vgroup[ifirst:ilast+1]).ravel().nonzero()[0]
+            vgroup[ifirst:ilast+1][~ok] = np.interp(x,xp,fp)
 
         prvel = psdepthmodel.Rayleigh_phase_velocities(self.periods,modelfile=model96)
 
@@ -407,34 +436,65 @@ class DispersionCurve:
         Su = 1./vgroup
         tu = self.dist()*Su
 
-        try:
-            ifirst = min(np.where(np.isfinite(tu))[0])  # indices where vg is not nan
-            ilast = max(np.where(np.isfinite(tu))[0])
-        except ValueError:
-            self.vphase = vphase
-            self.Kval = kval
-            return vphase, kval
-
         phpred = om[ilast]*(tu[ilast] - (self.dist()/prvel[ilast]))
-        k = np.rint((phpred - self.phase[ilast])/2./np.pi)
+        if calc_kval:
+            k = np.rint((phpred - self.phase[ilast])/2./np.pi)
+            kval[ilast] = k
+        else:
+            k = kval[ilast]
         vphase[ilast] = self.dist()/(tu[ilast] - (self.phase[ilast] + 2.*k*np.pi + \
                         pi4_sign*np.pi/4)/om[ilast])
-        kval[ilast] = k
+
+        inds = np.arange(ilast,ifirst-1,-skip)
 
         # work backwards from here:
-        for ip in range(ilast-1,ifirst-1,-1):
-            Vpred = 1/(((Su[ip]+Su[ip+1])*(om[ip]-om[ip+1])/2. + om[ip+1]/vphase[ip+1])/om[ip])
+        for ip in inds[1:]:
+            Vpred = 1/(((Su[ip]+Su[ip+skip])*(om[ip]-om[ip+skip])/2. + om[ip+1]/vphase[ip+skip])/om[ip])
             phpred = om[ip]*(tu[ip] - (self.dist()/Vpred))
-            k = np.rint((phpred - self.phase[ip])/2./np.pi)
+            if calc_kval:
+                k = np.rint((phpred - self.phase[ip])/2./np.pi)
+                kval[ip] = k
+            else:
+                k = kval[ip]
             vphase[ip] = self.dist()/(tu[ip] - (self.phase[ip] + 2.*k*np.pi + \
                          pi4_sign*np.pi/4)/om[ip])
-            kval[ip] = k
+
+        if skip > 1:
+            fvph = interp1d(self.periods[inds],vphase[inds],fill_value='extrapolate')
+            vphase[ifirst:ilast] = fvph(self.periods[ifirst:ilast])
 
         # save to self
         self.vphase = vphase
-        self.Kval = kval
+        sefl.kval = kval
+        return
 
-        return vphase, kval  # do I actually want this?
+    def adjust_kval(self):
+        """
+        adjust k values to account for 2pi transitions that are over too many points
+        """
+        ifirst = min(np.where(np.isfinite(self.vphase))[0])  # indices where **vphase** is not nan
+        ilast = max(np.where(np.isfinite(self.vphase))[0])
+        kval = copy(self.kval)
+
+        # are there big (>1.8?) jumps in phase?
+        phase_diff = np.diff(self.phase[ifirst:ilast+1])
+        phase_jump = np.where(abs(phase_diff)>1.0)[0] + ifirst  # indexing in whole array
+            # TODO: is 1. a good threshold?
+
+        # do they correspond to jumps in vphase that are probably not real?
+        # run from last one to first one (as per usual, longest periods first)
+        for i in phase_jump[::-1]:
+            v_jump = vphase[i] - vphase[i+1]
+            if abs(v_jump) > 0.1:  # TODO: is 0.1 a good threshold?
+            # if so, does k change accordingly?
+                k_jump = kval[i] - kval[i+1]
+                # if yes/yes/no, figure out how many pts are involved, and split k across that
+                if k_jump == 0:
+                    add_k = phase_diff[i - ifirst]/(2*np.pi)
+                    kval[:i+1] = kval[:i+1] + add_k
+        return kval
+
+
 
 
 class Grid:
@@ -676,7 +736,7 @@ class VelocityMap:
      means that the product operation (*) on such objects is NOT the
      element-by-element product, but the real matrix product.
     """
-    def __init__(self, dispersion_curves, period, skipstations=(), skippairs=(),
+    def __init__(self, dispersion_curves, period, vtype='group', skipstations=(), skippairs=(),
                  resolution_fit='cone', min_resolution_height=0.1,
                  showplot=False, verbose=True, **kwargs):
         """
@@ -687,6 +747,8 @@ class VelocityMap:
           parameters and the resolution matrix
         - estimates the characteristic spatial resolution by fitting a cone
           to each line of the resolution matrix
+
+        Choose either phase or group velocity for tomography
 
         Specify stations and/or pairs to be skipped (if any), as lists, e.g.:
           skipstations = ['PORB', 'CAUB']
@@ -738,12 +800,16 @@ class VelocityMap:
         @type skippairs: list of (str, str)
         """
         self.period = period
+        self.vtype = vtype
 
         # reading inversion parameters
         minspectSNR = kwargs.get('minspectSNR', MINSPECTSNR)
         minspectSNR_nosdev = kwargs.get('minspectSNR_nosdev', MINSPECTSNR_NOSDEV)
         minnbtrimester = kwargs.get('minnbtrimester', MINNBTRIMESTER)
         maxsdev = kwargs.get('maxsdev', MAXSDEV)
+        maxperiodfactor = kwargs.get('maxperiodfactor', MAXPERIOD_FACTOR)
+        usewavelengthcutoff = kwargs.get('usewavelengthcutoff', USE_WAVELENGTH_CUTOFF)
+        minwavelengthfactor = kwargs.get('minwavelengthfactor', MINWAVELENGTH_FACTOR)
         lonstep = kwargs.get('lonstep', LONSTEP)
         latstep = kwargs.get('latstep', LATSTEP)
         correlation_length = kwargs.get('correlation_length', CORRELATION_LENGTH)
@@ -783,12 +849,15 @@ class VelocityMap:
             c.update_parameters(minspectSNR=minspectSNR,
                                 minspectSNR_nosdev=minspectSNR_nosdev,
                                 minnbtrimester=minnbtrimester,
-                                maxsdev=maxsdev)
+                                maxsdev=maxsdev,
+                                maxperiodfactor=maxperiodfactor,
+                                usewavelengthcutoff=usewavelengthcutoff,
+                                minwavelengthfactor=minwavelengthfactor)
 
         # valid dispersion curves (velocity != nan at period) and
         # associated interstation distances
         self.disp_curves = [c for c in dispersion_curves
-                            if not np.isnan(c.filtered_vel_sdev_SNR(self.period)[0])]
+                            if not np.isnan(c.filtered_vel_sdev_SNR(self.period,vtype=self.vtype)[0])]
 
         if not self.disp_curves:
             s = "No valid velocity at selected period ({} sec)"
@@ -797,7 +866,7 @@ class VelocityMap:
         dists = np.array([c.dist() for c in self.disp_curves])
 
         # getting (non nan) velocities and std devs at period
-        vels, sigmav, _ = zip(*[c.filtered_vel_sdev_SNR(self.period)
+        vels, sigmav, _ = zip(*[c.filtered_vel_sdev_SNR(self.period,vtype=self.vtype)
                                 for c in self.disp_curves])
         vels = np.array(vels)
         sigmav = np.array(sigmav)
