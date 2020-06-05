@@ -72,6 +72,7 @@
 # file per month and per station.
 
 MSEED_DIR = ../seed/1P_mn_z
+#MSEED_DIR = ../seed/YJ_mn_z
 STATIONXML_DIR = ../StationXML_files
 DATALESS_DIR = ../seed/dataless
 
@@ -261,8 +262,8 @@ MAX_RELDIFF_INST_MEDIAN_PERIOD = 0.5
 MINSPECTSNR = 5
 # min spectral SNR to retain velocity if no std dev
 MINSPECTSNR_NOSDEV = 15
-# max sdt dev (km/s) to retain velocity
-MAXSDEV = 0.1
+# max sdt dev (km/s) to retain velocity  (original was 0.1; we want to ignore sdev for now)
+MAXSDEV = 10
 # min nb of trimesters to estimate std dev  (original was 4)
 MINNBTRIMESTER = 3
 # max period = *MAXPERIOD_FACTOR* * pair distance  (original: 1/12)
