@@ -477,7 +477,7 @@ class DispersionCurve:
             ilast = max(np.where(np.isfinite(self.vphase))[0])
         except:
             print('no adjustment')
-            return kval
+            return copy(self.kval)
         kval = copy(self.kval)
 
         # are there big (>1.8?) jumps in phase?
@@ -488,7 +488,7 @@ class DispersionCurve:
         # do they correspond to jumps in vphase that are probably not real?
         # run from last one to first one (as per usual, longest periods first)
         for i in phase_jump[::-1]:
-            v_jump = vphase[i] - vphase[i+1]
+            v_jump = self.vphase[i] - self.vphase[i+1]
             if abs(v_jump) > 0.1:  # TODO: is 0.1 a good threshold?
             # if so, does k change accordingly?
                 k_jump = kval[i] - kval[i+1]
