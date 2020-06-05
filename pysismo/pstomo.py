@@ -341,6 +341,11 @@ class DispersionCurve:
         mask[~has_sdev] &= \
             np.nan_to_num(self._SNRs[~has_sdev]) >= self.minspectSNR_nosdev
 
+        # 3.5) check to make sure vphase is always greater than vgroup
+        if vtype == 'phase':
+            too_small = self.vphase <= self.v
+            mask[too_small] = False  # exclude vphase if less than vgroup
+
         # replacing velocities not passing the selection criteria with NaNs
         if vtype == 'group':
             return np.where(mask, self.v, np.nan), sdevs
@@ -497,8 +502,6 @@ class DispersionCurve:
                     add_k = phase_diff[i - ifirst]/(2*np.pi)
                     kval[:i+1] = kval[:i+1] + add_k
         return kval
-
-
 
 
 class Grid:
@@ -849,14 +852,23 @@ class VelocityMap:
                                  if not {c.station1.name, c.station2.name} in skippairs]
 
         # updating parameters of dispersion curves
+        new_qc = np.array([minspectSNR, minspectSNR_nosdev, minnbtrimester, maxsdev,\
+                           maxperiodfactor, usewavelengthcutoff, minwavelengthfactor])
         for c in dispersion_curves:
-            c.update_parameters(minspectSNR=minspectSNR,
-                                minspectSNR_nosdev=minspectSNR_nosdev,
-                                minnbtrimester=minnbtrimester,
-                                maxsdev=maxsdev,
-                                maxperiodfactor=maxperiodfactor,
-                                usewavelengthcutoff=usewavelengthcutoff,
-                                minwavelengthfactor=minwavelengthfactor)
+            old_qc = np.array([c.minspectSNR, c.minspectSNR_nosdev, c.minnbtrimester,\
+                               c.maxsdev, c.maxperiodfactor, c.usewavelengthcutoff, \
+                               c.minwavelengthfactor])
+            if np.any(new_qc != old_qc):
+                c.update_parameters(minspectSNR=minspectSNR,
+                                    minspectSNR_nosdev=minspectSNR_nosdev,
+                                    minnbtrimester=minnbtrimester,
+                                    maxsdev=maxsdev,
+                                    maxperiodfactor=maxperiodfactor,
+                                    usewavelengthcutoff=usewavelengthcutoff,
+                                    minwavelengthfactor=minwavelengthfactor)
+                c.calculate_phase_velocities()  # if QC has changed, recalculate vphase
+                new_k = c.adjust_kval()
+                c.calculate_phase_velocities(kval=new_k)
 
         # valid dispersion curves (velocity != nan at period) and
         # associated interstation distances
