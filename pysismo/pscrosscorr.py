@@ -1361,6 +1361,8 @@ class CrossCorrelation:
         fmt = '-' if (~np.isnan(vels)).sum() > 1 else 'o'
         ax.errorbar(x=cleanvg.periods, y=vels, yerr=sdevs, fmt=fmt, color='black',
                     lw=2, label='clean disp curve')
+        vels_phase,_ = cleanvg.filtered_vels_sdevs(vtype='phase')
+        ax.plot(cleanvg.periods, vels_phase, color='r', label='phase vel curve')
 
         # legend
         ax.legend(fontsize=11, loc='upper right')
