@@ -954,6 +954,7 @@ class CrossCorrelation:
                       optimize_curve=None,
                       strength_smoothing=STRENGTH_SMOOTHING,
                       use_inst_freq=USE_INSTANTANEOUS_FREQ,
+                      return_cleanphase=False,
                       **kwargs):
         """
         Frequency-time analysis including phase-matched filter and
@@ -1024,6 +1025,7 @@ class CrossCorrelation:
             print("Warning: could not calculate instantenous frequencies in raw FTAN!")
             rawampl = np.nan * np.zeros((len(RAWFTAN_PERIODS), len(FTAN_VELOCITIES)))
             cleanampl = np.nan * np.zeros((len(CLEANFTAN_PERIODS), len(FTAN_VELOCITIES)))
+            cleanpha = np.nan * np.zeros((len(CLEANFTAN_PERIODS), len(FTAN_VELOCITIES)))
             rawvg = pstomo.DispersionCurve(periods=RAWFTAN_PERIODS,
                                            v=np.nan * np.zeros(len(RAWFTAN_PERIODS)),
                                            station1=self.station1,
@@ -1034,7 +1036,11 @@ class CrossCorrelation:
                                              station1=self.station1,
                                              station2=self.station2,
                                              phase=np.nan*np.zeros(len(CLEANFTAN_PERIODS)))
-            return rawampl, rawvg, cleanampl, cleanvg
+            cleanvg.calculate_phase_velocities()  # all will be nan since vg is nan
+            if return_cleanphase:
+                return rawampl,rawvg,cleanampl,cleanpha,cleanvg
+            else:
+                return rawampl, rawvg, cleanampl, cleanvg
 
         # phase function from raw vg curve
         phase_corr = xc.phase_func(vgcurve=rawvg)
@@ -1042,7 +1048,7 @@ class CrossCorrelation:
         # clean FTAN
         cleanvg_init = np.zeros_like(CLEANFTAN_PERIODS)
         try:
-            cleanampl, _, cleanvg = xc.FTAN(whiten=False,
+            cleanampl, cleanpha, cleanvg = xc.FTAN(whiten=False,
                                             phase_corr=phase_corr,
                                             months=months,
                                             optimize_curve=optimize_curve,
@@ -1054,12 +1060,17 @@ class CrossCorrelation:
             # pb with instantaneous frequency: returnin NaNs
             print("Warning: could not calculate instantenous frequencies in clean FTAN!")
             cleanampl = np.nan * np.zeros((len(CLEANFTAN_PERIODS), len(FTAN_VELOCITIES)))
+            cleanpha = np.nan * np.zeros((len(CLEANFTAN_PERIODS), len(FTAN_VELOCITIES)))
             cleanvg = pstomo.DispersionCurve(periods=CLEANFTAN_PERIODS,
                                              v=np.nan * np.zeros(len(CLEANFTAN_PERIODS)),
                                              station1=self.station1,
                                              station2=self.station2,
                                              phase=np.nan*np.zeros(len(CLEANFTAN_PERIODS)))
-            return rawampl, rawvg, cleanampl, cleanvg
+            cleanvg.calculate_phase_velocities()  # again, all nan
+            if return_cleanphase:
+                return rawampl, rawvg, cleanampl, cleanpha, cleanvg
+            else:
+                return rawampl, rawvg, cleanampl, cleanvg
 
         # adding spectral SNRs associated with the periods of the
         # clean vg curve
@@ -1124,7 +1135,15 @@ class CrossCorrelation:
                 # adding trimester vg curves
                 cleanvg.add_trimester(trimester_start, cleanvg_trimester)
 
-        return rawampl, rawvg, cleanampl, cleanvg
+        # add vphase and k
+        cleanvg.calculate_phase_velocities()
+        new_k = cleanvg.adjust_kval()
+        cleanvg.calculate_phase_velocities(kval=new_k)  # adjust for jumps
+
+        if return_cleanphase:
+            return rawampl, rawvg, cleanampl, cleanpha, cleanvg
+        else:
+            return rawampl, rawvg, cleanampl, cleanvg
 
     def phase_func(self, vgcurve):
         """
@@ -1338,7 +1357,7 @@ class CrossCorrelation:
             ax.plot(cleanvg.periods, vg_trimester, color='gray', label=label)
 
         # clean vg curve + error bars
-        vels, sdevs = cleanvg.filtered_vels_sdevs()
+        vels, sdevs = cleanvg.filtered_vels_sdevs(vtype='group')
         fmt = '-' if (~np.isnan(vels)).sum() > 1 else 'o'
         ax.errorbar(x=cleanvg.periods, y=vels, yerr=sdevs, fmt=fmt, color='black',
                     lw=2, label='clean disp curve')
