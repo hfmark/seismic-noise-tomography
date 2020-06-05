@@ -17,7 +17,7 @@ from matplotlib import gridspec
 from matplotlib.colors import ColorConverter
 import shutil
 from inspect import getargspec
-from copy import deepcopy
+from copy import deepcopy, copy
 
 
 # todo: discard measurments if too different from trimester velocities (see BB15B-SPB)
@@ -472,8 +472,12 @@ class DispersionCurve:
         """
         adjust k values to account for 2pi transitions that are over too many points
         """
-        ifirst = min(np.where(np.isfinite(self.vphase))[0])  # indices where **vphase** is not nan
-        ilast = max(np.where(np.isfinite(self.vphase))[0])
+        try:
+            ifirst = min(np.where(np.isfinite(self.vphase))[0])  # indices where **vphase** is not nan
+            ilast = max(np.where(np.isfinite(self.vphase))[0])
+        except:
+            print('no adjustment')
+            return kval
         kval = copy(self.kval)
 
         # are there big (>1.8?) jumps in phase?
