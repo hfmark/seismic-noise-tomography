@@ -6,16 +6,11 @@ import os, sys
 from pysismo.psconfig import FTAN_DIR
 
 ####
-# combine dispersion curve lists from two separate FTAN runs. possible? probably. wise? unclear.
+# combine dispersion curve lists
 ####
 
 # selecting dispersion curves
-#setname = 'al20_snr7_wv3'
-#setname = 'al20_snr7_wv3_vpc'
-#setname = 'al12_snr7_wv3'
-setname = 'al12_snr7_wv3_vpc'
-
-flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*dataless*%s.pickle' % setname)))
+flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*datalesspaz.pickle')))
 print(flist)
 res = input('')
 
@@ -29,14 +24,14 @@ for pickle_file in flist:
 
     for c in curves:
         try:
-            v,s = c.filtered_vels_sdevs()
+            v,s = c.filtered_vels_sdevs(vtype='group')
             snr = c._SNRs
             everything.append(c)
         except Exception:  # curves without spectral SNR get excluded
             print(c)
 
 
-ofile = os.path.join(FTAN_DIR, 'FTAN_2004-2019_%s.pickle' % setname)
+ofile = os.path.join(FTAN_DIR, 'FTAN_2004-2019_datalesspaz.pickle')
 f = open(ofile,'wb')
 pickle.dump(everything, f, protocol=2)
 f.close()
