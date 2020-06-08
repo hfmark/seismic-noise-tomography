@@ -481,7 +481,7 @@ class DispersionCurve:
             ifirst = min(np.where(np.isfinite(self.vphase))[0])  # indices where **vphase** is not nan
             ilast = max(np.where(np.isfinite(self.vphase))[0])
         except:
-            print('no adjustment')
+        #    print('no adjustment')
             return copy(self.kval)
         kval = copy(self.kval)
 
@@ -866,9 +866,10 @@ class VelocityMap:
                                     maxperiodfactor=maxperiodfactor,
                                     usewavelengthcutoff=usewavelengthcutoff,
                                     minwavelengthfactor=minwavelengthfactor)
-                c.calculate_phase_velocities()  # if QC has changed, recalculate vphase
-                new_k = c.adjust_kval()
-                c.calculate_phase_velocities(kval=new_k)
+                if self.vtype == 'phase':
+                    c.calculate_phase_velocities()  # if QC has changed, recalculate vphase
+                    new_k = c.adjust_kval()
+                    c.calculate_phase_velocities(kval=new_k)
 
         # valid dispersion curves (velocity != nan at period) and
         # associated interstation distances
