@@ -70,11 +70,13 @@ import itertools as it
 # inversion parameters to vary
 PERIODS = [8.0, 14.0, 20.0]
 GRID_STEPS = [0.3]
-MINPECTSNRS = [7.0]
+MINPECTSNRS = [5.0]
 CORR_LENGTHS = [50, 100]
 ALPHAS = [25, 50, 100, 200, 400]
 BETAS = [50]
 LAMBDAS = [0.15, 0.3]
+
+vtype = 'group'
 
 # parsing configuration file to import dirs
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
@@ -106,7 +108,7 @@ for pickle_file in pickle_files:
     except:
         pass
     basename = os.path.basename(pickle_file).replace('FTAN', 'testparams-tomography')
-    pdfname = os.path.join(TOMO_DIR, os.path.splitext(basename)[0]) + '.pdf'
+    pdfname = os.path.join(TOMO_DIR, os.path.splitext(basename)[0]) + '_' + vtype + '.pdf'
     print("Maps will be exported to pdf file: " + pdfname)
     if os.path.exists(pdfname):
         # backup
@@ -147,7 +149,8 @@ for pickle_file in pickle_files:
                                correlation_length=corr_length,
                                alpha=alpha,
                                beta=beta,
-                               lambda_=lambda_)
+                               lambda_=lambda_
+                               vtype=vtype)
 
         # creating a figure summing up the results of the inversion:
         # - 1st panel = map of velocities or velocity anomalies
