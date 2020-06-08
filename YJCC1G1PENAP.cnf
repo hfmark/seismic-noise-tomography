@@ -149,8 +149,10 @@ USE_STATIONXML = False
 
 # first day of cross-correlation (d/m/y)
 FIRSTDAY = 01/05/2011
+#FIRSTDAY = 01/12/2004
 # last day of cross-correlation (d/m/y)
 LASTDAY = 31/10/2019
+#LASTDAY = 31/05/2006
 
 # minimum data fill within day
 MINFILL = 0.99
