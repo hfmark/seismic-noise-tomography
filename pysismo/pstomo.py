@@ -853,12 +853,13 @@ class VelocityMap:
 
         # updating parameters of dispersion curves
         new_qc = np.array([minspectSNR, minspectSNR_nosdev, minnbtrimester, maxsdev,\
-                           maxperiodfactor, usewavelengthcutoff, minwavelengthfactor])
+                           maxperiodfactor, minwavelengthfactor])
         for c in dispersion_curves:
             old_qc = np.array([c.minspectSNR, c.minspectSNR_nosdev, c.minnbtrimester,\
-                               c.maxsdev, c.maxperiodfactor, c.usewavelengthcutoff, \
+                               c.maxsdev, c.maxperiodfactor, \
                                c.minwavelengthfactor])
-            if np.any(new_qc != old_qc):
+            if np.any(abs(new_qc - old_qc)/old_qc) > 0.05 or \
+			usewavelengthcutoff != c.usewavelengthcutoff:
                 c.update_parameters(minspectSNR=minspectSNR,
                                     minspectSNR_nosdev=minspectSNR_nosdev,
                                     minnbtrimester=minnbtrimester,
