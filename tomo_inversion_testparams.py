@@ -70,7 +70,7 @@ import itertools as it
 # inversion parameters to vary
 PERIODS = [8.0, 14.0, 20.0]
 GRID_STEPS = [0.3]
-MINPECTSNRS = [5.0]
+MINSPECTSNRS = [5.0]
 CORR_LENGTHS = [50, 100]
 ALPHAS = [25, 50, 100, 200, 400]
 BETAS = [50]
@@ -117,7 +117,7 @@ for pickle_file in pickle_files:
 
     # performing tomographic inversions, systematically
     # varying the inversion parameters
-    param_lists = it.product(PERIODS, GRID_STEPS, MINPECTSNRS, CORR_LENGTHS,
+    param_lists = it.product(PERIODS, GRID_STEPS, MINSPECTSNRS, CORR_LENGTHS,
                              ALPHAS, BETAS, LAMBDAS)
     param_lists = list(param_lists)
     for period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_ in param_lists:
