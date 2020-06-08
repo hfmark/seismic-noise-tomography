@@ -149,7 +149,7 @@ for pickle_file in pickle_files:
                                correlation_length=corr_length,
                                alpha=alpha,
                                beta=beta,
-                               lambda_=lambda_
+                               lambda_=lambda_,
                                vtype=vtype)
 
         # creating a figure summing up the results of the inversion:
