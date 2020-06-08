@@ -76,7 +76,7 @@ ALPHAS = [25, 50, 100, 200, 400]
 BETAS = [50]
 LAMBDAS = [0.15, 0.3]
 
-vtype = 'group'
+vtype = 'phase'
 
 # parsing configuration file to import dirs
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
