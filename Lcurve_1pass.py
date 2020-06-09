@@ -9,12 +9,14 @@ import numpy as np
 # inversion parameters to vary
 PERIODS = [10.0]
 GRID_STEPS = [0.3]
-MINPECTSNRS = [7.0]
+MINSPECTSNRS = [5.0]
 CORR_LENGTHS = [50]
 ALPHAS = np.append(np.arange(50,500,50),np.arange(500,2500,100))
-#BETAS = np.arange(10,200,30)
-BETAS = [10,50]
+BETAS = np.arange(10,200,30)
+#BETAS = [10,50]
 LAMBDAS = [0.2]
+
+vtype = 'group'
 
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
 
@@ -43,7 +45,7 @@ try:
 except:
     pass
 basename = os.path.basename(pickle_file).replace('FTAN', 'Lcurve-params')
-ofilename = os.path.join(TOMO_DIR, os.path.splitext(basename)[0]) + '.dat'
+ofilename = os.path.join(TOMO_DIR, os.path.splitext(basename)[0]) +'_' + vtype + '.dat'
 if os.path.exists(ofilename):
     # backup
     shutil.copyfile(ofilename, ofilename + '~')
@@ -51,7 +53,7 @@ f = open(ofilename,'w')
 
 # performing tomographic inversions, systematically
 # varying the inversion parameters
-param_lists = it.product(PERIODS, GRID_STEPS, MINPECTSNRS, CORR_LENGTHS,
+param_lists = it.product(PERIODS, GRID_STEPS, MINSPECTSNRS, CORR_LENGTHS,
                          ALPHAS, BETAS, LAMBDAS)
 param_lists = list(param_lists)
 for period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_ in param_lists:
@@ -83,7 +85,8 @@ for period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_ in param_l
                            correlation_length=corr_length,
                            alpha=alpha,
                            beta=beta,
-                           lambda_=lambda_)
+                           lambda_=lambda_,
+                           vtype=vtype)
 
     misfit = v.velocity_residuals()
     norm = v.model_norm()
