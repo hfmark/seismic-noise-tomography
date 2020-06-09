@@ -84,11 +84,13 @@ PERIODS = [8.0, 14.0, 20.0, 26.0]
 
 # parameters for the 1st and 2nd pass, respectively
 GRID_STEPS = (0.3, 0.3)
-MINPECTSNRS = (7.0, 7.0)
+MINPECTSNRS = (5.0, 5.0)
 CORR_LENGTHS = (50, 50)
 ALPHAS = (400, 100)
 BETAS = (50, 50)
 LAMBDAS = (0.3, 0.3)
+
+vtype = 'group'
 
 # stations to skip (if any)
 SKIP_STATIONS = []
@@ -131,8 +133,8 @@ for pickle_file in pickle_files:
     outprefix = os.path.join(TOMO_DIR, os.path.splitext(basename)[0])
     if usersuffix:
         outprefix += '_{}'.format(usersuffix)
-    pdfname = outprefix + '.pdf'
-    picklename = outprefix + '.pickle'
+    pdfname = outprefix + '_%s.pdf' % vtype
+    picklename = outprefix + '_%s.pickle' % vtype
     print("Maps will be exported as figures to file: " + pdfname)
     print("Final (2-passed) maps will be pickled to file: " + picklename)
 
@@ -185,7 +187,8 @@ for pickle_file in pickle_files:
                                        correlation_length=CORR_LENGTHS[passnb],
                                        alpha=ALPHAS[passnb],
                                        beta=BETAS[passnb],
-                                       lambda_=LAMBDAS[passnb])
+                                       lambda_=LAMBDAS[passnb],
+                                       vtype=vtype)
             except CannotPerformTomoInversion as err:
                 print("Cannot perform tomo inversion: {}".format(err))
                 for fig in periodfigs:
@@ -252,7 +255,8 @@ for pickle_file in pickle_files:
                                        correlation_length=CORR_LENGTHS[1],
                                        alpha=ALPHAS[1],
                                        beta=BETAS[1],
-                                       lambda_=LAMBDAS[1])
+                                       lambda_=LAMBDAS[1],
+                                       vtype=vtype)
             except CannotPerformTomoInversion as err:
                 print("Cannot perform tomo inversion: {}".format(err))
                 for fig in periodfigs:
