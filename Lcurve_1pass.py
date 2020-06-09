@@ -7,7 +7,7 @@ import itertools as it
 import numpy as np
 
 # inversion parameters to vary
-PERIODS = [10.0]
+PERIODS = [8.0, 14.0, 20.0]
 GRID_STEPS = [0.3]
 MINSPECTSNRS = [5.0]
 CORR_LENGTHS = [50]
