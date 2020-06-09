@@ -16,7 +16,7 @@ BETAS = np.arange(10,200,30)
 #BETAS = [10,50]
 LAMBDAS = [0.2]
 
-vtype = 'group'
+vtype = 'phase'
 
 from pysismo.psconfig import FTAN_DIR, TOMO_DIR
 
