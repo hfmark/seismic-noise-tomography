@@ -96,3 +96,7 @@ for period, grid_step, minspectSNR, corr_length, alpha, beta, lambda_ in param_l
                 abs(misfit).sum(), norm, len(misfit)))
 
 f.close()
+
+#import pandas as pd
+#A = np.loadtxt('output/tomography/Lcurve-params_2004-2019_datalesspaz_group.dat')
+#data = pd.DataFrame(A,columns=['period','grid_step','min_spectSNR','corr_length','alpha','beta','lam','misfit','norm','npaths'])
