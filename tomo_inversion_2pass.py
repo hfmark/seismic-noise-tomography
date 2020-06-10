@@ -76,21 +76,28 @@ import shutil
 import glob
 import pickle
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
 # periods
 PERIODS = [8.0, 14.0, 20.0, 26.0]
 # PERIODS = range(10, 31)
 
-# parameters for the 1st and 2nd pass, respectively
-GRID_STEPS = (0.3, 0.3)
-MINPECTSNRS = (5.0, 5.0)
-CORR_LENGTHS = (50, 50)
-ALPHAS = (400, 100)
-BETAS = (50, 50)
-LAMBDAS = (0.3, 0.3)
-
+# parameters for each tomo pass
+npass = 3
 vtype = 'group'
+
+GRID_STEPS = 0.3*np.ones(npass)  #(0.3, 0.3)
+MINSPECTSNRS = 5.0*np.ones(npass) #(5.0, 5.0)
+CORR_LENGTHS = 50*np.ones(npass) #(50, 50)
+ALPHAS = (400, 200, 100)
+BETAS = 50*np.ones(npass) #(50, 50)
+LAMBDAS = 0.3*np.ones(npass) #(0.3, 0.3)
+fancy_names = ('1st','2nd','3rd','4th')
+
+assert np.all([len(GRID_STEPS)==npass,len(MINSPECTSNRS)==npass,len(CORR_LENGTHS)==npass,\
+               len(ALPHAS)==npass,len(BETAS)==npass,len(LAMBDAS)==npass,\
+               len(fancy_names)>=npass]), 'not enough parameters for %i passes' % npass
 
 # stations to skip (if any)
 SKIP_STATIONS = []
@@ -150,13 +157,13 @@ for pickle_file in pickle_files:
 
         periodfigs = []
 
-        # 2-pass inversion
+        # n-pass inversion
         skippairs = []
-        for passnb in (0, 1):
+        for passnb in range(npass):
             s = ("{} pass (rejecting {} pairs): grid step = {}, min SNR = {}, "
                  "corr. length = {} km, alpha = {}, beta = {}, lambda = {}")
-            print(s.format('1st' if passnb == 0 else '2nd', len(skippairs),
-                           GRID_STEPS[passnb], MINPECTSNRS[passnb],
+            print(s.format(fancy_names[passnb], len(skippairs),
+                           GRID_STEPS[passnb], MINSPECTSNRS[passnb],
                            CORR_LENGTHS[passnb], ALPHAS[passnb],
                            BETAS[passnb], LAMBDAS[passnb]))
 
@@ -183,7 +190,7 @@ for pickle_file in pickle_files:
                                        verbose=False,
                                        lonstep=GRID_STEPS[passnb],
                                        latstep=GRID_STEPS[passnb],
-                                       minspectSNR=MINPECTSNRS[passnb],
+                                       minspectSNR=MINSPECTSNRS[passnb],
                                        correlation_length=CORR_LENGTHS[passnb],
                                        alpha=ALPHAS[passnb],
                                        beta=BETAS[passnb],
@@ -196,14 +203,17 @@ for pickle_file in pickle_files:
                 # next period
                 break
 
-            if passnb == 0:
+            if passnb < npass-1:
                 # pairs whose residual is > 3 times the std dev of
                 # the residuals are rejected from the next pass
                 residuals = v.traveltime_residuals()
                 maxresidual = 3 * residuals.std()
-                skippairs = [(c.station1.name, c.station2.name)
+                badpairs = [(c.station1.name, c.station2.name)
                              for c, r in zip(v.disp_curves, residuals)
                              if abs(float(r)) > maxresidual]
+                for ib in range(len(badpairs)):
+                    skippairs.append(badpairs[ib])
+                print(skippairs)
             else:
                 # adding velocity map to the dict of final maps
                 vmaps[period] = v
@@ -223,8 +233,8 @@ for pickle_file in pickle_files:
             title = ("Period = {0} s, {1} pass, grid {2} x {2} deg, "
                      "min SNR = {3}, corr. length = {4} km, alpha = {5}, "
                      "beta = {6}, lambda = {7} ({8} paths, {9} rejected)")
-            title = title.format(period, '1st' if passnb == 0 else '2nd',
-                                 GRID_STEPS[passnb], MINPECTSNRS[passnb],
+            title = title.format(period, fancy_names[passnb],
+                                 GRID_STEPS[passnb], MINSPECTSNRS[passnb],
                                  CORR_LENGTHS[passnb], ALPHAS[passnb],
                                  BETAS[passnb], LAMBDAS[passnb], len(v.paths),
                                  len(skippairs))
@@ -241,21 +251,21 @@ for pickle_file in pickle_files:
             # let's compare the 2-pass tomography with a one-pass tomography
             s = ("One-pass tomography: grid step = {}, min SNR = {}, "
                  "corr. length = {} km, alpha = {}, beta = {}, lambda = {}")
-            print(s.format(GRID_STEPS[1], MINPECTSNRS[1], CORR_LENGTHS[1],
-                           ALPHAS[1], BETAS[1], LAMBDAS[1]))
+            print(s.format(GRID_STEPS[-1], MINSPECTSNRS[-1], CORR_LENGTHS[-1],
+                           ALPHAS[-1], BETAS[-1], LAMBDAS[-1]))
 
             # tomographic inversion
             try:
                 v = pstomo.VelocityMap(dispersion_curves=curves,
                                        period=period,
                                        verbose=False,
-                                       lonstep=GRID_STEPS[1],
-                                       latstep=GRID_STEPS[1],
-                                       minspectSNR=MINPECTSNRS[1],
-                                       correlation_length=CORR_LENGTHS[1],
-                                       alpha=ALPHAS[1],
-                                       beta=BETAS[1],
-                                       lambda_=LAMBDAS[1],
+                                       lonstep=GRID_STEPS[-1],
+                                       latstep=GRID_STEPS[-1],
+                                       minspectSNR=MINSPECTSNRS[-1],
+                                       correlation_length=CORR_LENGTHS[-1],
+                                       alpha=ALPHAS[-1],
+                                       beta=BETAS[-1],
+                                       lambda_=LAMBDAS[-1],
                                        vtype=vtype)
             except CannotPerformTomoInversion as err:
                 print("Cannot perform tomo inversion: {}".format(err))
@@ -268,9 +278,9 @@ for pickle_file in pickle_files:
             title = ("Period = {0} s, one pass, grid {1} x {1} deg, "
                      "min SNR = {2}, corr. length = {3} km, alpha = {4}, "
                      "beta = {5}, lambda = {6} ({7} paths)")
-            title = title.format(period, GRID_STEPS[1], MINPECTSNRS[1],
-                                 CORR_LENGTHS[1], ALPHAS[1],
-                                 BETAS[1], LAMBDAS[1], len(v.paths))
+            title = title.format(period, GRID_STEPS[-1], MINSPECTSNRS[-1],
+                                 CORR_LENGTHS[-1], ALPHAS[-1],
+                                 BETAS[-1], LAMBDAS[-1], len(v.paths))
             fig = v.plot(title=title, showplot=False)
 
             # appending fig to figures of period
@@ -286,7 +296,7 @@ for pickle_file in pickle_files:
     pdf.close()
 
     # merging pages of pdf with similar period
-    key = lambda pagenb: int(pagenb / 3)  # grouping pages 0-1-2, then 3-4-5 etc.
+    key = lambda pagenb: int(pagenb / (npass+1))
 
     pagesgroups = psutils.groupbykey(pagenbs, key=key)
     print("\nMerging pages of pdf...")
