@@ -89,8 +89,8 @@ vtype = 'phase'
 
 GRID_STEPS = 0.3*np.ones(npass)  #(0.3, 0.3)
 MINSPECTSNRS = 5.0*np.ones(npass) #(5.0, 5.0)
-CORR_LENGTHS = 50*np.ones(npass) #(50, 50)
-ALPHAS = (400, 200, 100)
+CORR_LENGTHS = 100*np.ones(npass) #(50, 50)
+ALPHAS = (400, 250, 150)
 BETAS = 50*np.ones(npass) #(50, 50)
 LAMBDAS = 0.3*np.ones(npass) #(0.3, 0.3)
 fancy_names = ('1st','2nd','3rd','4th')
