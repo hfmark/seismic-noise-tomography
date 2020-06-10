@@ -85,7 +85,7 @@ PERIODS = [8.0, 14.0, 20.0, 26.0]
 
 # parameters for each tomo pass
 npass = 3
-vtype = 'group'
+vtype = 'phase'
 
 GRID_STEPS = 0.3*np.ones(npass)  #(0.3, 0.3)
 MINSPECTSNRS = 5.0*np.ones(npass) #(5.0, 5.0)
@@ -213,7 +213,6 @@ for pickle_file in pickle_files:
                              if abs(float(r)) > maxresidual]
                 for ib in range(len(badpairs)):
                     skippairs.append(badpairs[ib])
-                print(skippairs)
             else:
                 # adding velocity map to the dict of final maps
                 vmaps[period] = v
