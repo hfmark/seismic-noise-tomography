@@ -136,7 +136,7 @@ for pickle_file in pickle_files:
         os.makedirs(TOMO_DIR)
     except:
         pass
-    basename = os.path.basename(pickle_file).replace('FTAN', '2-pass-tomography')
+    basename = os.path.basename(pickle_file).replace('FTAN', '%i-pass-tomography' % npass)
     outprefix = os.path.join(TOMO_DIR, os.path.splitext(basename)[0])
     if usersuffix:
         outprefix += '_{}'.format(usersuffix)
