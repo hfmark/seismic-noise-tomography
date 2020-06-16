@@ -232,6 +232,10 @@ MAXPERIOD_FACTOR = config.getfloat('tomography', 'MAXPERIOD_FACTOR')
 USE_WAVELENGTH_CUTOFF = config.getboolean('tomography', 'USE_WAVELENGTH_CUTOFF')
 MINWAVELENGTH_FACTOR = config.getfloat('tomography', 'MINWAVELENGTH_FACTOR')
 
+# station pairs to skip in tomography
+SKIP_PAIRS = json.loads(config.get('tomography','SKIP_PAIRS'))
+SKIP_PAIRS = [tuple((k,SKIP_PAIRS[k])) for k in SKIP_PAIRS.keys()]
+
 # Default internode spacing of grid
 LONSTEP = config.getfloat('tomography', 'LONSTEP')
 LATSTEP = config.getfloat('tomography', 'LATSTEP')

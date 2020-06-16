@@ -78,6 +78,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
+from copy import copy
 
 # periods
 PERIODS = [8.0, 14.0, 20.0, 26.0]
@@ -103,7 +104,7 @@ assert np.all([len(GRID_STEPS)==npass,len(MINSPECTSNRS)==npass,len(CORR_LENGTHS)
 SKIP_STATIONS = []
 
 # parsing configuration file to import dirs
-from pysismo.psconfig import FTAN_DIR, TOMO_DIR
+from pysismo.psconfig import FTAN_DIR, TOMO_DIR, SKIP_PAIRS
 
 # selecting dispersion curves
 flist = sorted(glob.glob(os.path.join(FTAN_DIR, 'FTAN*.pickle*')))
@@ -158,7 +159,7 @@ for pickle_file in pickle_files:
         periodfigs = []
 
         # n-pass inversion
-        skippairs = []
+        skippairs = copy(SKIP_PAIRS)
         for passnb in range(npass):
             s = ("{} pass (rejecting {} pairs): grid step = {}, min SNR = {}, "
                  "corr. length = {} km, alpha = {}, beta = {}, lambda = {}")

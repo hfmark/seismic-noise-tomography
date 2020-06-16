@@ -138,7 +138,6 @@ TECTO_COLORS = {
 BBOX_LARGE = [-76, -65, -56, -42]
 BBOX_SMALL = [-76, -65, -56, -42]
 
-
 #==================
 [cross-correlation]
 #==================
@@ -275,19 +274,20 @@ MAXPERIOD_FACTOR = 0.08333
 USE_WAVELENGTH_CUTOFF = True
 MINWAVELENGTH_FACTOR = 2.5
 
-# Default internode spacing of grid
+# station pairs to automatically skip in tomography
+# this will be read with json and parsed to a list of tuples
+SKIP_PAIRS = {"AY01": "GUMN"}
 
+# Default internode spacing of grid
 LONSTEP = 1
 LATSTEP = 1
 
 # Default correlation length of the smoothing kernel:
 # S(r,r') = exp[-|r-r'|**2 / (2 * correlation_length**2)]
-
 CORRELATION_LENGTH = 150
 
 # Default strength of the spatial smoothing term (alpha) and the
 # weighted norm penalization term (beta) in the penalty function
-
 ALPHA = 400
 BETA = 200
 
@@ -295,5 +295,4 @@ BETA = 200
 # such that the norm is weighted by exp(- lambda_*path_density)
 # With a value of 0.15, penalization becomes strong when path density < ~20
 # With a value of 0.30, penalization becomes strong when path density < ~10
-
 LAMBDA = 0.3
