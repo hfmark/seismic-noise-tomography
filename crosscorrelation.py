@@ -398,8 +398,11 @@ for date in dates:
             beween two traces
             """
             (s1, tr1), (s2, tr2) = pair
-            print('{}-{}, {} '.format(s1, s2, len(tr1.data)-len(tr2.data)),)
+            print('{}-{} '.format(s1, s2),)
             shift = int(CROSSCORR_TMAX / PERIOD_RESAMPLE)
+            if abs(len(tr1.data) - len(tr2.data))%2 != 0:  # odd number length difference
+                # pick one of the traces and lop off a sample to make the difference even
+                tr1.data = tr1.data[:-1]
             xcorr = obspy.signal.cross_correlation.correlate(
                 tr1, tr2, shift, demean=False, normalize=None)
             return xcorr

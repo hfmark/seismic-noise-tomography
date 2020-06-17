@@ -234,6 +234,8 @@ class CrossCorrelation:
         # cross-correlation
         if xcorr is None:
             # calculating cross-corr using obspy, if not already provided
+            if abs(len(tr1.data) - len(tr2.data))%2 != 0:
+                tr1.data = tr1.data[:-1]  # make the length difference even
             xcorr = obspy.signal.cross_correlation.correlate(
                 tr1, tr2, self._get_xcorr_nmax(), demean=False, normalize=False)
 
