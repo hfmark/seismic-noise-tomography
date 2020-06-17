@@ -400,8 +400,8 @@ for date in dates:
             (s1, tr1), (s2, tr2) = pair
             print('{}-{} '.format(s1, s2),)
             shift = int(CROSSCORR_TMAX / PERIOD_RESAMPLE)
-            xcorr = obspy.signal.cross_correlation.xcorr(
-                tr1, tr2, shift_len=shift, full_xcorr=True)[2]
+            xcorr = obspy.signal.cross_correlation.correlate(
+                tr1, tr2, shift, demean=False, normalize=None)
             return xcorr
 
         pairs = list(it.combinations(sorted(tracedict.items()), 2))
