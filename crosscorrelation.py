@@ -400,6 +400,8 @@ for date in dates:
             (s1, tr1), (s2, tr2) = pair
             print('{}-{} '.format(s1, s2),)
             shift = int(CROSSCORR_TMAX / PERIOD_RESAMPLE)
+            if len(tr1.data) != len(tr2.data):
+                print(s1,s2,len(tr1.data),len(tr2.data))
             xcorr = obspy.signal.cross_correlation.correlate(
                 tr1, tr2, shift, demean=False, normalize=None)
             return xcorr
