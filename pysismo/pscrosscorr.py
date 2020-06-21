@@ -799,6 +799,7 @@ class CrossCorrelation:
 
         # FTAN analysis: amplitute and phase function of
         # center periods T0 and time t
+        filter_alpha = 20.*np.sqrt(self.dist()/1000)
         ampl, phase = FTAN(x=xcdata,
                            dt=xcout._get_xcorr_dt(),
                            periods=ftan_periods,
@@ -1309,7 +1310,11 @@ class CrossCorrelation:
         ax.plot(cleanvg.periods, cleanvg.v, fmt, color='black',
                 lw=2, label='clean disp curve')
         # plotting cut-off period
-        cutoffperiod = self.dist() / 12.0
+        if not cleanvg.usewavelengthcutoff:
+            cutoffperiod = self.dist()*cleanvg.maxperiodfactor
+        else:
+            cutoffperiod = cleanvg.periods[self.dist()/(cleanvg.minwavelengthfactor*cleanvg.v) >= \
+                                        cleanvg.periods].max()
         ax.plot([cutoffperiod, cutoffperiod], ylim, color='grey')
 
         # setting legend and initial extent
@@ -1375,7 +1380,7 @@ class CrossCorrelation:
                 horizontalalignment='center',
                 verticalalignment='center')
         # plotting cut-off period
-        cutoffperiod = self.dist() / 12.0
+        #cutoffperiod = self.dist() / 12.0
         ax.plot([cutoffperiod, cutoffperiod], ylim, color='grey')
         # setting initial extent
         ax.set_xlim(xlim)

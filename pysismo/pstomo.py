@@ -237,6 +237,7 @@ class DispersionCurve:
 
         @type xc: L{CrossCorrelation}
         """
+        filter_alpha = 20.*np.sqrt(xc.dist()/1000)
         centerperiods_and_alpha = zip(self.periods, [filter_alpha] * len(self.periods))
         SNRs = xc.SNR(centerperiods_and_alpha=centerperiods_and_alpha,
                       months=months, vmin=vmin, vmax=vmax,
