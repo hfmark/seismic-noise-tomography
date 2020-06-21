@@ -265,7 +265,7 @@ MAX_RELDIFF_INST_MEDIAN_PERIOD = 0.5
 # min spectral SNR to retain velocity
 MINSPECTSNR = 5
 # min spectral SNR to retain velocity if no std dev
-MINSPECTSNR_NOSDEV = 15
+MINSPECTSNR_NOSDEV = 5
 # max sdt dev (km/s) to retain velocity  (original was 0.1; we want to ignore sdev for now)
 MAXSDEV = 10
 # min nb of trimesters to estimate std dev  (original was 4)
