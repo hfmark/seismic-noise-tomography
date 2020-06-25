@@ -325,7 +325,7 @@ class DispersionCurve:
             mask = self.periods <= cutoffperiod
         else:  # wavelength cutoff, velocity-dependent
             # 1) period <= distance / (minwavelengthfactor * v)
-            goodperiods = self.dist() / (self.minwavelengthfactor * self.v)
+            goodperiods = np.nan_to_num(self.dist() / (self.minwavelengthfactor * self.v))
             with np.errstate(invalid='ignore'):
                 mask = self.periods <= goodperiods
 
