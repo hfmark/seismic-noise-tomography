@@ -470,7 +470,8 @@ class CrossCorrelation:
                            (xcout.timearray <= tnoise[1])
 
             peak = np.abs(dataarray[signal_window]).max()
-            noise = dataarray[noise_window].std()
+            #noise = dataarray[noise_window].std()
+            noise = sum(np.abs(dataarray[noise_window]))/len(dataarray[noise_window])
 
             # appending SNR
             SNR.append(peak / noise)
@@ -803,7 +804,7 @@ class CrossCorrelation:
         ampl, phase = FTAN(x=xcdata,
                            dt=xcout._get_xcorr_dt(),
                            periods=ftan_periods,
-                           alpha=FTAN_ALPHA,
+                           alpha=filter_alpha,
                            phase_corr=phase_corr)
 
         # re-interpolating amplitude and phase as functions
@@ -1313,7 +1314,8 @@ class CrossCorrelation:
         if not cleanvg.usewavelengthcutoff:
             cutoffperiod = self.dist()*cleanvg.maxperiodfactor
         else:
-            cutoffperiod = cleanvg.periods[self.dist()/(cleanvg.minwavelengthfactor*cleanvg.v) >= \
+            cutoffperiod = cleanvg.periods[np.nan_to_num(self.dist()/\
+						(cleanvg.minwavelengthfactor*cleanvg.v)) >= \
                                         cleanvg.periods].max()
         ax.plot([cutoffperiod, cutoffperiod], ylim, color='grey')
 
